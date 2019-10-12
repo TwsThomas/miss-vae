@@ -119,7 +119,8 @@ def gen_outcome(Z, w, tau, link = "linear", sd=0.1):
     return y
 
 # Generate missing values in X such that, on average, X contains 100*prop_miss missing values
-def ampute(X, prop_miss = 0.1):
+def ampute(X, prop_miss = 0.1, seed):
+    np.random.seed(seed)
     X_miss = np.copy(X)
     mask = np.random.binomial(1,prop_miss, size=X.shape)
     X_miss[mask] = np.nan
