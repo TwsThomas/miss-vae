@@ -6,11 +6,12 @@ from metrics import tau_dr, tau_ols, tau_ols_ps
 from generate_data import gen_lrmf, ampute
 
 
-def exp(n=1000, d=3, p=100, d_miwae=3, n_epochs=1):
+def exp(n=1000, d=3, p=100, prop_miss=0.1, d_miwae=3, n_epochs=1,
+		method = "glm"):
 
     Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p)
 
-    X_miss = ampute(X)
+    X_miss = ampute(X, prop_miss = prop_miss)
 
     xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae,
                                  n_epochs=n_epochs)
