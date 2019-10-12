@@ -1,7 +1,8 @@
 import numpy as np
+from scikit.linear_model import LogisticRegression
 
 from miwae import miwae
-from metrics import tau_dr, tau_ols
+from metrics import tau_dr, tau_ols, tau_ols_ps
 from generate_data import gen_lrmf, ampute
 
 
@@ -19,11 +20,36 @@ def exp(n=1000, d=3, p=100, d_miwae=3, n_epochs=1):
     #    (1000, 200) (1000, 3) (200, 1000, 3)
     print(xhat.shape, zhat.shape, zhat_mul.shape)
 
-    res_tau_dr = 0 #tau_dr(zhat, w, y, "glm", y1_hat, y0_hat, ps_hat)
-    res_tau_ols = tau_ols(zhat, w, y)
+    # Tau estimated on Zhat=E[Z|X]
+	res_tau_ols = tau_ols(zhat, w, y)
+
+	lr = LogisticRegression()
+	lr.fit(zhat, w)
+	ps_hat = lr.predict_proba(zhat)
+	res_tau_ols_ps = tau_ols_ps(zhat, w, y, ps_hat)
+
+	if method == "glm":
+	    
+	    lr = LinearRegression()
+	    lr.fit(zhat[np.equal(w, np.ones(n)),:], y[np.equal(w, np.ones(n))])
+	    y1_hat = lr.predict(zhat)
+
+	    lr = LinearRegression()
+	    lr.fit(zhat[np.equal(w, np.zeros(n)),:], y[np.equal(w, np.zeros(n))])
+	    y0_hat = lr.predict(zhat)
+
+	    res_tau_dr = tau_dr(zhat, w, y, "glm", y1_hat, y0_hat, ps_hat)
+	    
+	elif method == "grf":
+		res_tau_dr = np.nan
+    	raise NotImplementedError("Causal forest estimation not implemented here yet.")
+	else:
+		res_tau_dr = np.nan
+        raise ValueError("'method' should be choosed between 'glm' and 'grf' in 'exp', got %s", method)
 
     print('tau_dr =', res_tau_dr)
     print('tau_ols =', res_tau_ols)
+    print('tau_ols_ps =', res_tau_ols_ps)
 
     return res_tau_dr, res_tau_ols
 
