@@ -88,13 +88,15 @@ def plot_n_d():
 
     range_n = [10**4, 10**6]
     range_p = [20,100, 1000]
+    range_prop_miss = [0, 0.1, 0.3]
 
     l_scores = []
     for n in range_n:
         for p in range_p:
-            print(n, p)
-            l_scores.append(exp(n=n, d=3, p=p, d_miwae=3, n_epochs=2))
-            print('exp with (n,p)=',n,p,'........... DONE !')
+        	for prop_miss in range_prop_miss:
+            	print(n, p, prop_miss)
+            	l_scores.append(exp(n=n, d=3, p=p, prop_miss = prop_miss, d_miwae=3, n_epochs=2))
+            	print('exp with (n,p)=',n,p,'........... DONE !')
 
     np.savetxt(l_scores, 'results/plot_n_d.nptxt')
 
