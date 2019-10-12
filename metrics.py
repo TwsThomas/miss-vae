@@ -1,5 +1,8 @@
 import numpy as np
 
+from sklearn.linear_model import LinearRegression
+
+
 # Doubly robust ATE estimation
 # if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
 #                     for the two response surfaces and the propensity scores respectively
