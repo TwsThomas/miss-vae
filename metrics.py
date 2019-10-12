@@ -7,12 +7,13 @@ import numpy as np
 def tau_dr(Z_hat, w, y, method = "glm", y1_hat, y0_hat, ps_hat):
 
 	if method == "glm":
-		tau_i = y1_hat - y0_hat + w*(y-y1_hat)/ps_hat - 
-					(1-w)*(y-y0_hat)/(1-ps_hat)
+		tau_i = y1_hat - y0_hat + w*(y-y1_hat)/ps_hat -\
+            					(1-w)*(y-y0_hat)/(1-ps_hat)
     	tau = mean(tau_i)
     elif method == "grf":
-    	print("Causal forest estimation not implemented here yet.")
-
+    	raise NotImplementedError("Causal forest estimation not implemented here yet.")
+    else:
+        raise ValueError("'methof' should be choosed between 'glm' and 'grf' in 'tau_dr', got %s", method)
     return tau
 
 # ATE estimation via OLS regression 

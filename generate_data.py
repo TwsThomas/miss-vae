@@ -14,7 +14,7 @@ def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
     X = Z.dot(V.transpose())
     assert X.shape == (n,p)
 
-    X = X + noise_sd*np.random.randn(n,d) # add perturbation to observation matrix
+    X = X + noise_sd*np.random.randn(n,p) # add perturbation to observation matrix
 
     # generate treatment assignment W
     ps, w = gen_treat(Z, link)
@@ -41,9 +41,7 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
     alpha = np.random.randn(h,1)
     beta = np.random.uniform(1)
 
-
     np.random.seed(seed)
-
     Z = np.random.randn(n,d)
 
     X = np.empty([n,p])
@@ -57,8 +55,7 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
     ps, w = gen_treat(Z, link)
 
     # generate outcome
-    y = gen_outcome(Z, w, tau, link)
-
+    y = gen_outcome(Z, w, tau, link, sd=sd)
     
     print(y.shape, Z.shape, W.shape)
     assert y.shape == (n,)
@@ -69,8 +66,8 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
 # Compute expectation and covariance of conditional distribution X given Z
 def get_dlvm_params(z, V, W, a, b, alpha, beta):
     hu = W.dot(z) + a
-    mu = V.dot(tanh(hu)) + b
-    sig = exp(alpha.dot(tanh(hu)) + beta)
+    mu = V.dot(np.tanh(hu)) + b
+    sig = np.exp(alpha.dot(np.tanh(hu)) + beta)
     Sigma = sig*np.identity(p)
 
     return mu, Sigma
@@ -82,42 +79,43 @@ def gen_treat(Z, link = "linear"):
         beta = np.tile([0.3, -0.3], int(np.ceil(ncolZ/2.)))
         beta = beta[:ncolZ]
         f_Z = Z.dot(beta)
-        ps = 1/(1+exp(-f_Z))
+        ps = 1/(1+np.exp(-f_Z))
         w = np.random.binomial(1, ps)
-        balanced = mean(w) > 0.4 & mean(w) < 0.6
+        balanced = np.mean(w) > 0.4 and np.mean(w) < 0.6
 
         # adjust the intercept term if necessary to ensure balanced treatment groups
-        offsets = linspace(-5, 5, num=50)
+        offsets = np.linspace(-5, 5, num=50)
         i, best_idx, min_diff = 0, 0, Z.shape[0]
-        while i < len(offsets) & not balanced:
-            ps = 1/(1+exp(-offsets[i] - f_Z))
+        while i < len(offsets) and not balanced:
+            ps = 1/(1+np.exp(-offsets[i] - f_Z))
             w = np.random.binomial(1, ps)
-            balanced = mean(w) > 0.4 & mean(w) < 0.6
-            diff = abs(mean(w) - mean(1-w))
+            balanced = np.mean(w) > 0.4 & np.mean(w) < 0.6
+            diff = abs(np.mean(w) - np.mean(1-w))
             if diff < min_diff:
                 best_idx, min_diff = i, diff
             i += 1
         if (i == len(offsets)):
-            ps = 1/(1+exp(-offsets[best_idx]-f_Z))
+            ps = 1/(1+np.exp(-offsets[best_idx]-f_Z))
             w = np.random.binomial(1, ps)
     elif link == "nonlinear":
-        print "Nonlinear w~Z not defined yet."
+        raise NotImplementedError("Nonlinear w~Z not defined yet.")
     else:
-        print("Choose between linear and nonlinear model for w.")
+        raise ValueError("'link' should be choosed between linear and nonlinear model for w. got %s", link)
     return ps, w
 
 # Generate outcomes using confounders Z, treatment assignment w and ATE tau
-def gen_outcome(Z, w, tau, link = "linear"):
+def gen_outcome(Z, w, tau, link = "linear", sd=0.1):
     if link == "linear":
+        n = Z.shape[0]
         ncolZ = Z.shape[1]
         epsilon = sd*np.random.randn(n)
         beta = np.tile([-0.2, 0.155, 0.5, -1, 0.2], int(np.ceil(ncolZ/5.)))
         beta = beta[:ncolZ]
         y = 0.5 + Z.dot(beta).reshape((-1)) + tau*w + epsilon
     elif link == "nonlinear":
-        print "Nonlinear y~Z not defined yet."
+        raise NotImplementedError("Nonlinear w~Z not defined yet.")
     else:
-        print("Choose between linear and nonlinear model for y.")
+        raise ValueError("'link' should be choosed between linear and nonlinear model for y. got %s", link)
     return y
 
 # Generate missing values in X such that, on average, X contains 100*prop_miss missing values

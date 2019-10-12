@@ -2,12 +2,12 @@ import numpy as np
 
 from miwae import miwae
 from model import linear_tau
-from generate_data import gen_linear, ampute
+from generate_data import gen_lrmf, ampute
 
 
 def exp(n=1000, d=3, p=100, d_miwae=3, n_epochs=2):
 
-    Z, X, W, y = gen_linear(n=n, d=d, p=p)
+    Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p)
 
     X_miss = ampute(X)
 
@@ -17,7 +17,7 @@ def exp(n=1000, d=3, p=100, d_miwae=3, n_epochs=2):
     print('shape of outputs miwae:')
     print(xhat.shape, zhat.shape, zhat_mul.shape)
 
-    tau = linear_tau(zhat, W, y)
+    tau = linear_tau(zhat, w, y)
 
     print('tau =', tau)
     return tau
