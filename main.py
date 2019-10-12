@@ -52,7 +52,36 @@ def exp(n=1000, d=3, p=100, prop_miss=0.1, d_miwae=3, n_epochs=1,
     print('tau_ols =', res_tau_ols)
     print('tau_ols_ps =', res_tau_ols_ps)
 
-    return res_tau_dr, res_tau_ols
+    # Tau estimated on Zhat^(b), l=1,...,B sampled from posterior
+    res_mul_tau_dr = np.empty(zhat_mul.shape[0])
+    res_mul_tau_ols = np.empty(zhat_mul.shape[0])
+    res_mul_tau_ols_ps = np.empty(zhat_mul.shape[0])
+    for b in range(zhat_mul.shape[0]):
+    	lr = LogisticRegression()
+    	lr.fit(zhat_mul[b,:,:], w)
+    	ps_hat = lr.predict_proba(zhat_mul[b,:,:])
+
+    	lr = LinearRegression()
+    	lr.fit(zhat_mul[b, np.equal(w, np.ones(n)),:], y[np.equal(w, np.ones(n))])
+    	y1_hat = lr.predict(zhat_mul[b,:,:])
+
+    	lr = LinearRegression()
+    	lr.fit(zhat_mul[b, np.equal(w, np.zeros(n)),:], y[np.equal(w, np.zeros(n))])
+    	y0_hat = lr.predict(zhat_mul[b,:,:])
+
+    	res_mul_tau_dr[b] = tau_dr(zhat_mul[b,:,:], w, y, "glm", y1_hat, y0_hat, ps_hat)
+    	res_mul_tau_ols[b] = tau_ols(zhat_mul[b,:,:], w, y)
+    	res_mul_tau_ols_ps[b] = tau_ols_ps(zhat_mul[b,:,:], w, y, ps_hat)
+
+    res_mul_tau_dr = np.mean(res_mul_tau_dr)
+    res_mul_tau_ols = np.mean(res_mul_tau_ols)
+    res_mul_tau_ols_ps = np.mean(res_mul_tau_ols_ps)
+
+    print('mul_tau_dr =', res_mul_tau_dr)
+    print('mul_tau_ols =', res_mul_tau_ols)
+    print('mul_tau_ols_ps =', res_mul_tau_ols_ps)
+
+    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps
 
 
 def plot_n_d():
