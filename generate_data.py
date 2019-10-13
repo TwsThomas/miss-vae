@@ -66,9 +66,10 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
 # Compute expectation and covariance of conditional distribution X given Z
 def get_dlvm_params(z, V, W, a, b, alpha, beta):
     
-    hu = (W.dot(z) + a).reshape(h,1)
-    h_,p = z.shape
-    u = W.dot(z) + a
+    h,p = z.shape
+    # print(W.shape, z.shape, a.shape, z.shape)
+    hu = (W.dot(z) + a).reshape(-1,1) # same shape of a (not h)
+    # u = W.dot(z) + a
     mu = V.dot(np.tanh(hu)) + b
     sig = np.exp(alpha.transpose().dot(np.tanh(hu)) + beta)
     Sigma = sig*np.identity(p)

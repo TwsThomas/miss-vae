@@ -5,10 +5,10 @@ from sklearn.linear_model import LogisticRegression
 
 from miwae import miwae
 from metrics import tau_dr, tau_ols, tau_ols_ps
-from generate_data import gen_lrmf, ampute
+from generate_data import gen_lrmf, ampute, gen_dlvm
 
 
-def exp(model="lrmf", n=1000, d=3, p=100, prop_miss=0.1, seed = 0,
+def exp(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed = 0,
         d_miwae=3, n_epochs=602, sig_prior = 1,
 		method = "glm"):
 
@@ -16,7 +16,7 @@ def exp(model="lrmf", n=1000, d=3, p=100, prop_miss=0.1, seed = 0,
         Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
     elif model == "dlvm":
         Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, seed = seed)
-    else
+    else:
         raise NotImplementedError("Other data generating models not implemented here yet.")
         
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
@@ -113,7 +113,8 @@ def plot_epoch():
 
 if __name__ == '__main__':
 
+    # screen -S exp
     # taskset -c 0-23 python3 main.py
     # plot_epoch()
-    plot_n_d()
-    #exp()
+    # plot_n_d()
+    exp(n_epochs=2)
