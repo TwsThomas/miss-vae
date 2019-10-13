@@ -34,19 +34,19 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
 
     # V, W, a, b, alpha, beta are fixed throughout experiments for given n,p,d,h
     np.random.seed(0)
-    V = np.random.randn(n,h)
-    W = np.random.uniform(h*d).reshape((h,d))
-    a = np.random.uniform(h)
+    V = np.random.randn(p,h)
+    W = np.random.uniform(0,1,h*d).reshape((h,d))
+    a = np.random.uniform(0,1,h).reshape((h,1))
     b = np.random.randn(p,1)
     alpha = np.random.randn(h,1)
-    beta = np.random.uniform(1)
+    beta = np.random.uniform(0,1,1)
 
     np.random.seed(seed)
     Z = np.random.randn(n,d)
 
     X = np.empty([n,p])
     for i in range(n):
-        mu, Sigma = get_dlvm_params(Z[i,:], V, W, a, b, alpha, beta)
+        mu, Sigma = get_dlvm_params(Z[i,:].reshape(d,1), V, W, a, b, alpha, beta)
         X[i,:] = np.random.multivariate_normal(mu, Sigma, 1)
 
     assert X.shape == (n,p)
@@ -66,12 +66,11 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
 # Compute expectation and covariance of conditional distribution X given Z
 def get_dlvm_params(z, V, W, a, b, alpha, beta):
     
-    raise NotImplementedError('TODO: fix here')
-    hu = -1  # ??
+    hu = (W.dot(z) + a).reshape(h,1)
     h_,p = z.shape
     u = W.dot(z) + a
     mu = V.dot(np.tanh(hu)) + b
-    sig = np.exp(alpha.dot(np.tanh(hu)) + beta)
+    sig = np.exp(alpha.transpose().dot(np.tanh(hu)) + beta)
     Sigma = sig*np.identity(p)
 
     return mu, Sigma
