@@ -47,7 +47,7 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
     X = np.empty([n,p])
     for i in range(n):
         mu, Sigma = get_dlvm_params(Z[i,:], V, W, a, b, alpha, beta)
-        X[i,:] = random.multivariate_normal(mu, Sigma, 1)
+        X[i,:] = np.random.multivariate_normal(mu, Sigma, 1)
 
     assert X.shape == (n,p)
 
@@ -65,7 +65,11 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
 
 # Compute expectation and covariance of conditional distribution X given Z
 def get_dlvm_params(z, V, W, a, b, alpha, beta):
-    hu = W.dot(z) + a
+    
+    raise NotImplementedError('TODO: fix here')
+    hu = -1  # ??
+    h_,p = z.shape
+    u = W.dot(z) + a
     mu = V.dot(np.tanh(hu)) + b
     sig = np.exp(alpha.dot(np.tanh(hu)) + beta)
     Sigma = sig*np.identity(p)
@@ -89,7 +93,7 @@ def gen_treat(Z, link = "linear"):
         while i < len(offsets) and not balanced:
             ps = 1/(1+np.exp(-offsets[i] - f_Z))
             w = np.random.binomial(1, ps)
-            balanced = np.mean(w) > 0.4 & np.mean(w) < 0.6
+            balanced = np.mean(w) > 0.4 and np.mean(w) < 0.6
             diff = abs(np.mean(w) - np.mean(1-w))
             if diff < min_diff:
                 best_idx, min_diff = i, diff
@@ -119,7 +123,7 @@ def gen_outcome(Z, w, tau, link = "linear", sd=0.1):
     return y
 
 # Generate missing values in X such that, on average, X contains 100*prop_miss missing values
-def ampute(X, prop_miss = 0.1, seed):
+def ampute(X, prop_miss = 0.1, seed=0):
     np.random.seed(seed)
     X_miss = np.copy(X)
     mask = np.random.binomial(1,prop_miss, size=X.shape)

@@ -165,8 +165,9 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
       sess.run(tf.global_variables_initializer())
       for ep in range(1,n_epochs):
         perm = np.random.permutation(n) # We use the "random reshuffling" version of SGD
-        batches_data = np.array_split(xhat_0[perm,], n/bs)
-        batches_mask = np.array_split(mask[perm,], n/bs)
+        # print('debug n/bs = ', n/bs, int(n/bs))
+        batches_data = np.array_split(xhat_0[perm,], int(n/bs))
+        batches_mask = np.array_split(mask[perm,], int(n/bs))
         for it in range(len(batches_data)):
             train_miss.run(feed_dict={x: batches_data[it], learning_rate: 0.001, K:20, xmask: batches_mask[it]}) # Gradient step      
         if ep % 200 == 1:
@@ -188,10 +189,8 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
             # err = np.array([mse(xhat,xfull,mask)])
             # mse_train = np.append(mse_train,err,axis=0)
             # print('Imputation MSE  %g' %err)
-            print('----- miwae training done -----')
-
-  # ##########
-
+  
+  print('----- miwae training done -----')
   
 #   if add_mask:
 #     xhat_rescaled = xhat[:,0:int(p/2)]*np.std(data,0) + np.mean(data,0)

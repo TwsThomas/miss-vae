@@ -1,37 +1,60 @@
 import numpy as np
 
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 
 
-# Doubly robust ATE estimation
-# if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
-#                     for the two response surfaces and the propensity scores respectively
-# if method == "grf": no need to provide any fitted values
-def tau_dr(Z_hat, w, y, method = "glm", y1_hat, y0_hat, ps_hat):
+def tau_dr(zhat, w, y, method = "glm"):
+    """Doubly robust ATE estimation
+    
+    if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
+                        for the two response surfaces and the propensity scores respectively
+    if method == "grf": no need to provide any fitted values"""
 
-	if method == "glm":
-		tau_i = y1_hat - y0_hat + w*(y-y1_hat)/ps_hat -\
+    n,_ = zhat.shape
+    lr = LogisticRegression()
+    lr.fit(zhat, w)
+    ps_hat = lr.predict_proba(zhat)[:,1]  ## TOCHECK ps_hat: proba lr == 1, right ??
+
+    lr = LinearRegression()
+    lr.fit(zhat[np.equal(w, np.ones(n)),:], y[np.equal(w, np.ones(n))])
+    y1_hat = lr.predict(zhat)
+    
+    lr = LinearRegression()
+    lr.fit(zhat[np.equal(w, np.zeros(n)),:], y[np.equal(w, np.zeros(n))])
+    y0_hat = lr.predict(zhat)
+    
+    if method == "glm":
+        tau_i = y1_hat - y0_hat + w*(y-y1_hat)/ps_hat -\
             					(1-w)*(y-y0_hat)/(1-ps_hat)
-    	tau = mean(tau_i)
+        tau = np.mean(tau_i)
     elif method == "grf":
     	raise NotImplementedError("Causal forest estimation not implemented here yet.")
     else:
         raise ValueError("'method' should be choosed between 'glm' and 'grf' in 'tau_dr', got %s", method)
     return tau
 
-# ATE estimation via OLS regression 
+
 def tau_ols(Z_hat, w, y):
-    ZW = np.concatenate((Z_hat, w), axis=1)
+    # ATE estimation via OLS regression 
+
+    ZW = np.concatenate((Z_hat, w.reshape((-1,1))), axis=1)
     lr = LinearRegression()
     lr.fit(ZW, y)
     tau = lr.coef_[-1]
 
     return tau
 
-# Difference with linear_tau: add estimated propensity 
-# scores as additional predictor
-def tau_ols_ps(Z_hat, w, y, ps_hat):
-    ZpsW = np.concatenate((Z_hat,ps_hat, w), axis=1)
+
+def tau_ols_ps(zhat, w, y):
+    # Difference with linear_tau: add estimated propensity 
+    # scores as additional predictor
+
+    lr = LogisticRegression()
+    lr.fit(zhat, w)
+    ps_hat = lr.predict_proba(zhat)
+
+    ZpsW = np.concatenate((zhat,ps_hat, w.reshape((-1,1))), axis=1)
     lr = LinearRegression()
     lr.fit(ZpsW, y)
     tau = lr.coef_[-1]
