@@ -8,12 +8,17 @@ from metrics import tau_dr, tau_ols, tau_ols_ps
 from generate_data import gen_lrmf, ampute
 
 
-def exp(n=1000, d=3, p=100, prop_miss=0.1, seed = 0,
+def exp(model="lrmf", n=1000, d=3, p=100, prop_miss=0.1, seed = 0,
         d_miwae=3, n_epochs=602, sig_prior = 1,
 		method = "glm"):
 
-    Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
-
+    if model == "lrmf":
+        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
+    elif model == "dlvm":
+        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, seed = seed)
+    else
+        raise NotImplementedError("Other data generating models not implemented here yet.")
+        
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
     xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
