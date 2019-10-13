@@ -16,7 +16,7 @@ def tau_dr(Z_hat, w, y, method = "glm", y1_hat, y0_hat, ps_hat):
     elif method == "grf":
     	raise NotImplementedError("Causal forest estimation not implemented here yet.")
     else:
-        raise ValueError("'methof' should be choosed between 'glm' and 'grf' in 'tau_dr', got %s", method)
+        raise ValueError("'method' should be choosed between 'glm' and 'grf' in 'tau_dr', got %s", method)
     return tau
 
 # ATE estimation via OLS regression 

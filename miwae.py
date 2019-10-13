@@ -23,7 +23,7 @@ from sklearn.impute import SimpleImputer
 import os
 
 
-def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=True,
+def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
           num_samples_zmul=200, n_epochs = 602):
   # return xhat, zhat, zhat_mul
   # ! xhat_rescaled is NOT computed (x is never scaled !)
@@ -65,7 +65,8 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=True,
 
   # ##########
 
-  p_z = tfd.MultivariateNormalDiag(loc=tf.zeros(d_miwae, tf.float32))
+  p_z = tfd.MultivariateNormalDiag(loc=tf.zeros(d_miwae, tf.float32),
+                                   scale_diag = sig_prior*tf.ones(d_miwae, tf.float32))
 
   # ##########
 
