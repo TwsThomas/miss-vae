@@ -65,6 +65,7 @@ def plot_n_d():
 
     l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps']
     args_name = ['model', 'seed', 'n', 'p', 'prop_miss', 'sig_prior']
+    exp_name = 'plot_nd'
 
     l_scores = []
     for model in ["dlvm","lrmf"]:
@@ -84,7 +85,7 @@ def plot_n_d():
                             print('........... DONE !\n\n')
 
                 score_data = pd.DataFrame(l_scores, columns=args_name + l_tau)
-                score_data.to_csv('results/plot_nd_temp.csv')
+                score_data.to_csv('results/'+exp_name+'_temp.csv')
     
     print('saving ' +exp_name + 'at: results/'+exp_name+'.csv')
     score_data.to_csv('results/'+exp_name+'.csv')
