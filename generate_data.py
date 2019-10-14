@@ -1,8 +1,8 @@
 import numpy as np
 
 # Low rank matrix factorization
-def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
-             noise_sd = 1):
+def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
+             seed=0, noise_sd = 1):
 
     # V is fixed throughout experiments for given n,p,d
     np.random.seed(0)
