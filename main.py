@@ -65,6 +65,7 @@ def plot_n_d():
 
     l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps']
     args_name = ['seed', 'n', 'p', 'prop_miss', 'sig_prior']
+    exp_name = 'plot_nd'
 
     l_scores = []
     for seed in range_seed:
@@ -83,9 +84,10 @@ def plot_n_d():
                         print('........... DONE !\n\n')
 
             score_data = pd.DataFrame(l_scores, columns=args_name + l_tau)
-            score_data.to_csv('results/plot_nd_temp.csv')
+            score_data.to_csv('results/'+exp_name+'.csv')
     
-    score_data.to_csv('results/plot_nd.csv')
+    print('saving ' +exp_name + 'at: results/'+exp_name+'.csv')
+    score_data.to_csv('results/'+exp_name+'.csv')
 
 
 def plot_epoch():
@@ -113,8 +115,6 @@ def plot_epoch():
 
 if __name__ == '__main__':
 
-    # screen -S exp
-    # taskset -c 0-23 python3 main.py
     # plot_epoch()
     # plot_n_d()
     exp(n_epochs=2)
