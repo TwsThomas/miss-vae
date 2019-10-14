@@ -1,20 +1,17 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 
 
-def tau_dr(zhat, w, y, method = "glm"):
-    """Doubly robust ATE estimation
-    
-    if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
-                        for the two response surfaces and the propensity scores respectively
-    if method == "grf": no need to provide any fitted values"""
+def get_ps_y01_hat(zhat, w, y):
+    # predict with LR
 
     n,_ = zhat.shape
     lr = LogisticRegression()
     lr.fit(zhat, w)
-    ps_hat = lr.predict_proba(zhat)[:,1]  ## TOCHECK ps_hat: proba lr == 1, right ??
+    ps_hat = lr.predict_proba(zhat)[:,1]  
 
     lr = LinearRegression()
     lr.fit(zhat[np.equal(w, np.ones(n)),:], y[np.equal(w, np.ones(n))])
@@ -23,7 +20,20 @@ def tau_dr(zhat, w, y, method = "glm"):
     lr = LinearRegression()
     lr.fit(zhat[np.equal(w, np.zeros(n)),:], y[np.equal(w, np.zeros(n))])
     y0_hat = lr.predict(zhat)
-    
+
+    return ps_hat, y0_hat, y1_hat
+
+
+def tau_dr(y, w, y0_hat, y1_hat, ps_hat, method = "glm"):
+    """Doubly robust ATE estimation
+    if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
+                        for the two response surfaces and the propensity scores respectively
+    if method == "grf": no need to provide any fitted values"""
+
+    assert y0_hat.shape == y.shape
+    assert y1_hat.shape == y.shape
+    assert w.shape == y.shape
+
     if method == "glm":
         tau_i = y1_hat - y0_hat + w*(y-y1_hat)/ps_hat -\
             					(1-w)*(y-y0_hat)/(1-ps_hat)

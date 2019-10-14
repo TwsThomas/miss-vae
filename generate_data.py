@@ -22,7 +22,7 @@ def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
     # generate outcome
     y = gen_outcome(Z, w, tau, link)
 
-    print(y.shape, Z.shape, w.shape)
+    # print(y.shape, Z.shape, w.shape)
     assert y.shape == (n,)
     assert w.shape == (n,)
 
@@ -56,8 +56,8 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
 
     # generate outcome
     y = gen_outcome(Z, w, tau, link, sd=sd)
-    
-    print(y.shape, Z.shape, W.shape)
+
+    # print(y.shape, Z.shape, W.shape)
     assert y.shape == (n,)
     assert w.shape == (n,)
 

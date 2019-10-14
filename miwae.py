@@ -1,4 +1,5 @@
-# !pip3 install --user --upgrade scikit-learn # We need to update it to run missForest
+# -*- coding: utf-8 -*-
+# # !pip3 install --user --upgrade scikit-learn # We need to update it to run missForest
 import tensorflow as tf
 import numpy as np
 import scipy.stats
@@ -26,7 +27,7 @@ import os
 def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
           num_samples_zmul=200, n_epochs = 602):
   # return xhat, zhat, zhat_mul
-  # ! xhat_rescaled is NOT computed (x is never scaled !)
+  # # ! xhat_rescaled is NOT computed (x is never scaled !)
 
   np.random.seed(1234)
   tf.set_random_seed(1234)
