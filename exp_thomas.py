@@ -38,7 +38,7 @@ for args['model'] in ["dlvm","lrmf"]:
                             print('........... DONE')
                             print('in ', int(args["time"]) , ' s  \n\n')
 
-                        score_data = pd.DataFrame(l_scores, columns=args.keys() + l_tau)
+                        score_data = pd.DataFrame(l_scores, columns=list(args.keys()) + l_tau)
                         score_data.to_csv(output + '_temp')
 
 print('saving ' +exp_name + 'at: ' + output)
