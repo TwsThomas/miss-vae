@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import Imputer
 
 from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
 from generate_data import gen_lrmf, ampute, gen_dlvm
@@ -12,7 +11,9 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
 
+    # import here because of differents sklearn version used
     from cevea_tf import cevae_tf
+    from sklearn.preprocessing import Imputer
 
     if model == "lrmf":
         Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)

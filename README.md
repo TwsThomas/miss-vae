@@ -1,7 +1,7 @@
 # miss-vae
 
 
-### Running exp:
+### Running exp:  
 $ screen -S exp_7
 
 reserve cpu nb 0 to 23:  
@@ -15,8 +15,11 @@ $ scp tschmitt@drago:/home/tao/tschmitt/miss-vae/results/expname.csv /home/thoma
 ```
 
 
-### Running cevae model :
+### Running cevae model :  
+
+```bash
 conda config --append channels conda-forge
 conda create -n cevae_env numpy pandas scikit-learn==0.18.1  tensorflow==1.1.0 progressbar==2.3 pip scipy tensorflow-probability
 conda activate cevae_env
 pip install edward==1.3.1
+```
