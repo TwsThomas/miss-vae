@@ -7,7 +7,7 @@ from config import args
 
 # set here params 
 range_seed = np.arange(10)
-range_n = [20, 100000]
+range_n = [200, 100000]
 range_p = [20, 100]
 range_prop_miss = [0.1, 0.3, 0]
 range_sig_prior = [0.1, 1, 10]
