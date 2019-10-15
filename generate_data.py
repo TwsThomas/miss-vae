@@ -2,7 +2,7 @@ import numpy as np
 
 # Low rank matrix factorization
 def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
-             seed=0, noise_sd = 1):
+             seed=0, noise_sd = 1, sd = .1):
 
     # V is fixed throughout experiments for given n,p,d
     np.random.seed(0)
@@ -20,7 +20,7 @@ def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
     ps, w = gen_treat(Z, link)
 
     # generate outcome
-    y = gen_outcome(Z, w, tau, link)
+    y = gen_outcome(Z, w, tau, link, sd=sd)
 
     # print(y.shape, Z.shape, w.shape)
     assert y.shape == (n,)
@@ -31,7 +31,7 @@ def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
 
 # Deep Latent Variable Model (here, we use an MLP)
 def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
-             h = 5, sd = 0.1):
+             h = 5, sd = .1):
 
     # V, W, a, b, alpha, beta are fixed throughout experiments for given n,p,d,h
     np.random.seed(0)
@@ -81,7 +81,7 @@ def get_dlvm_params(z, V, W, a, b, alpha, beta):
 def gen_treat(Z, link = "linear"):
     if link == "linear":
         ncolZ = Z.shape[1]
-        beta = np.tile([0.3, -0.3], int(np.ceil(ncolZ/2.)))
+        beta = np.tile([0.6, -0.6], int(np.ceil(ncolZ/2.))) * 2
         beta = beta[:ncolZ]
         f_Z = Z.dot(beta)
         ps = 1/(1+np.exp(-f_Z))
@@ -109,12 +109,12 @@ def gen_treat(Z, link = "linear"):
     return ps, w
 
 # Generate outcomes using confounders Z, treatment assignment w and ATE tau
-def gen_outcome(Z, w, tau, link = "linear", sd=0.1):
+def gen_outcome(Z, w, tau, link = "linear", sd=10):
     if link == "linear":
         n = Z.shape[0]
         ncolZ = Z.shape[1]
         epsilon = sd*np.random.randn(n)
-        beta = np.tile([-0.2, 0.155, 0.5, -1, 0.2], int(np.ceil(ncolZ/5.)))
+        beta = np.tile([-0.2, 0.155, 0.5, -1, 0.2], int(np.ceil(ncolZ/5.)))  
         beta = beta[:ncolZ]
         y = 0.5 + Z.dot(beta).reshape((-1)) + tau*w + epsilon
     elif link == "nonlinear":
