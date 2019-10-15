@@ -12,6 +12,7 @@ range_p = [5, 100]
 range_prop_miss = [0.1, 0.3]
 range_sig_prior = [0.1, 1, 10]
 range_n_epochs = [10, 400]
+# d_miwae = [10, 100]
 
 exp_name = 'exp_15.2_10_choux'
 # 

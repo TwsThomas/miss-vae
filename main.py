@@ -33,11 +33,11 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
         pass
     
     Z_perm = np.random.permutation(Z)
-    Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
+    # Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
 
     tau = dict()
-    for name, zhat in zip(['Z', 'X', 'X_imp_mean', 'X_imp_mice', 'Z_perm', 'Z_rnd'],
-                          [Z, X, X_imp_mean, X_imp_mice, Z_perm, Z_rnd]):
+    for name, zhat in zip(['Z', 'X', 'X_imp_mean', 'X_imp_mice', 'Z_perm'],
+                          [Z, X, X_imp_mean, X_imp_mice, Z_perm]):
 
         # Tau estimated on Zhat=E[Z|X]
         ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)

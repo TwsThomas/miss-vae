@@ -111,11 +111,11 @@ def get_baseline(n=1000, p=100, d=3, gen_model = 'gen_lrfm'):
 
     return d_tau
 
-def boxplot_baseline(nn=10):
+def get_baseline(nn=10, model='dlvm', show=True):
 
     df_base = pd.DataFrame()
     for seed in range(nn):
-        d_tau = exp_baseline(seed = seed)
+        d_tau = exp_baseline(model = model, seed = seed)
         df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols2']).T
         df['seed'] = seed
         df_base = pd.concat((df_base, df))
@@ -123,9 +123,10 @@ def boxplot_baseline(nn=10):
     df_base['1-tau_dr'] = abs(1-df_base['tau_dr'])
     df_base.head()
 
-    sns.swarmplot(x='method', y='1-tau_dr', data=df_base)
-    plt.figure()
-    sns.boxplot(x='method', y='1-tau_dr', data=df_base)
+    # sns.swarmplot(x='method', y='1-tau_dr', data=df_base)
+    # plt.figure()
+    if show:
+        sns.boxplot(x='method', y='1-tau_dr', data=df_base)
     return df_base
 
 
