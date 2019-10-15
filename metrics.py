@@ -9,7 +9,7 @@ def get_ps_y01_hat(zhat, w, y):
     # predict with LR
 
     n,_ = zhat.shape
-    lr = LogisticRegression()
+    lr = LogisticRegression(solver='lbfgs')
     lr.fit(zhat, w)
     ps_hat = lr.predict_proba(zhat)[:,1]  
 
@@ -24,7 +24,7 @@ def get_ps_y01_hat(zhat, w, y):
     return ps_hat, y0_hat, y1_hat
 
 
-def tau_dr(y, w, y0_hat, y1_hat, ps_hat, method = "glm"):
+def tau_dr(y, w, y0_hat=None, y1_hat=None, ps_hat=None, method = "glm"):
     """Doubly robust ATE estimation
     if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
                         for the two response surfaces and the propensity scores respectively
@@ -48,6 +48,7 @@ def tau_dr(y, w, y0_hat, y1_hat, ps_hat, method = "glm"):
 def tau_ols(Z_hat, w, y):
     # ATE estimation via OLS regression 
 
+    assert w.shape == y.shape
     ZW = np.concatenate((Z_hat, w.reshape((-1,1))), axis=1)
     lr = LinearRegression()
     lr.fit(ZW, y)
@@ -60,7 +61,8 @@ def tau_ols_ps(zhat, w, y):
     # Difference with linear_tau: add estimated propensity 
     # scores as additional predictor
 
-    lr = LogisticRegression()
+    assert w.shape == y.shape
+    lr = LogisticRegression(solver='lbfgs')
     lr.fit(zhat, w)
     ps_hat = lr.predict_proba(zhat)
 

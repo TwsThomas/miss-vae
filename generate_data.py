@@ -25,6 +25,7 @@ def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
     # print(y.shape, Z.shape, w.shape)
     assert y.shape == (n,)
     assert w.shape == (n,)
+    assert Z.shape == (n,d)
 
     return Z, X, w, y, ps
 
@@ -60,6 +61,7 @@ def gen_dlvm(n=1000, d=3, p=100, tau = 1, link = "linear", seed=0,
     # print(y.shape, Z.shape, W.shape)
     assert y.shape == (n,)
     assert w.shape == (n,)
+    assert Z.shape == (n,d)
 
     return Z, X, w, y, ps
 

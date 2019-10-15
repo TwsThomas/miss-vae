@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-from sklearn.linear_model import LogisticRegression
 
 from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
 from generate_data import gen_lrmf, ampute, gen_dlvm
