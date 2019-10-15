@@ -171,7 +171,7 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
         batches_mask = np.array_split(mask[perm,], int(n/bs))
         for it in range(len(batches_data)):
             train_miss.run(feed_dict={x: batches_data[it], learning_rate: 0.001, K:20, xmask: batches_mask[it]}) # Gradient step      
-        if ep % 200 == 1:
+        if ep == n_epochs - 1:
             losstrain = np.array([miwae_loss.eval(feed_dict={x: xhat_0, K:20, xmask: mask})]) # MIWAE bound evaluation
             miwae_loss_train = np.append(miwae_loss_train,-losstrain,axis=0)
             print('Epoch %g' %ep)

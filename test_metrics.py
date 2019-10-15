@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from metrics import *
 from generate_data import *
 
