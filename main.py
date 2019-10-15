@@ -6,6 +6,49 @@ from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
 from generate_data import gen_lrmf, ampute, gen_dlvm
 
 
+def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
+        d_cevae=20, n_epochs=402,
+		method="glm", **kwargs):
+
+    if model == "lrmf":
+        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
+    elif model == "dlvm":
+        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, seed = seed)
+    else:
+        raise NotImplementedError("Other data generating models not implemented here yet.")
+        
+    X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
+    
+    X_imp_mean = np.zeros(X_miss.shape)
+    X_imp_mice = np.zeros(X_miss.shape)
+    try:
+        from sklearn.impute import SimpleImputer
+        X_imp_mean = SimpleImputer().fit_transform(X_miss)
+    except:
+        pass
+    try:
+        from sklearn.impute import IterativeImputer
+        X_imp_mice = IterativeImputer()().fit_transform(X_miss)
+    except:
+        pass
+    
+    Z_perm = np.random.permutation(Z)
+    Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
+
+    tau = dict()
+    for name, zhat in zip(['Z', 'X', 'X_imp_mean', 'X_imp_mice', 'Z_perm', 'Z_rnd'],
+                          [Z, X, X_imp_mean, X_imp_mice, Z_perm, Z_rnd]):
+
+        # Tau estimated on Zhat=E[Z|X]
+        ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)
+        res_tau_ols = tau_ols(zhat, w, y)
+        res_tau_ols_ps = tau_ols_ps(zhat, w, y)
+        res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+
+        tau[name] = res_tau_dr, res_tau_ols, res_tau_ols_ps
+    
+    return tau
+
 def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
