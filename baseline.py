@@ -9,6 +9,8 @@ import seaborn as sns
 import pandas as pd
 
 from sklearn.metrics import r2_score
+from joblib import Memory
+memory = Memory('cache_dir', verbose=0)
 
 
 def load_results(expname = 'exp_15.2_10_choux.csv_temp'):
@@ -36,6 +38,7 @@ def get_best_params(df_results, loss = '1-tau_dr'):
 
 
 def boxplot_with_baseline(df_results):
+    # boxplot all baseline + best of df_results
     best_params, df_best = get_best_params(df_results)
     df_base = get_baseline(**best_params)
 
@@ -43,8 +46,10 @@ def boxplot_with_baseline(df_results):
     # sns.boxplot(x='algo', y='1-tau_dr', data=df_co)
     sns.swarmplot(x='algo', y='1-tau_dr', data=df_co)
 
+@memory.cache
 def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
                  method="glm", repetitions=10, show=False, **kwargs):
+    # return baseline with X, X_imp, Z_perm
 
     df_base = pd.DataFrame()
     for seed in range(repetitions):
@@ -58,9 +63,12 @@ def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
     df_base['1-tau_dr'] = abs(1-df_base['tau_dr'])
     df_base.head()
 
-    # sns.swarmplot(x='method', y='1-tau_dr', data=df_base)
-    # plt.figure()
+    
     if show:
+        plt.figure(figsize=(15,5))
+        plt.subplot(1,2,1)
+        sns.swarmplot(x='algo', y='1-tau_dr', data=df_base)
+        plt.subplot(1,2,2)
         sns.boxplot(x='algo', y='1-tau_dr', data=df_base)
     return df_base
 

@@ -5,7 +5,11 @@ import pandas as pd
 from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
 from generate_data import gen_lrmf, ampute, gen_dlvm
 
+from joblib import Memory
+memory = Memory('cache_dir', verbose=0)
 
+
+@memory.cache
 def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
