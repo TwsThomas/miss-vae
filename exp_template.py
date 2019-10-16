@@ -16,7 +16,7 @@ range_n_epochs = [10, 200, 600]
 exp_name = 'exp_name0'
 # 
 
-
+args['algo'] = 'miwae'
 print('starting exp: ' + exp_name)
 l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps']
 output = 'results/'+exp_name+'.csv'
