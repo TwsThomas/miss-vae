@@ -16,7 +16,8 @@ memory = Memory('cache_dir', verbose=0)
 def load_results(expname = 'exp_15.2_10_choux.csv_temp'):
     df = pd.read_csv('results/' + expname)
     df.drop(labels='Unnamed: 0', inplace=True, axis=1)
-    df['1-tau_dr'] = abs(df['tau_dr'] - 1)
+    df['|1-tau_dr|'] = abs(df['tau_dr'] - 1)
+    df['|1-tau_ols|'] = abs(df['tau_ols'] - 1)
     print('results.shape', df.shape)
     if 'algo' not in list(df.columns):
         df.loc[:,'algo'] = ['miwae_'] * df.shape[0]
@@ -37,44 +38,50 @@ def get_best_params(df_results, loss = '1-tau_dr'):
     return best_params, df_best
 
 
-def boxplot_with_baseline(df_results):
+def boxplot_with_baseline(df_results, loss = '1-tau_dr'):
     # boxplot all baseline + best of df_results
-    best_params, df_best = get_best_params(df_results)
+    best_params, df_best = get_best_params(df_results, loss = loss)
     df_base = get_baseline(**best_params)
 
     df_co = pd.concat((df_best, df_base), sort=True)
     # sns.boxplot(x='algo', y='1-tau_dr', data=df_co)
-    sns.swarmplot(x='algo', y='1-tau_dr', data=df_co)
+
+    plt.figure(figsize=(15,5))
+    plt.subplot(1,2,1)
+    sns.swarmplot(x='algo', y=loss, data=df_co)
+    plt.subplot(1,2,2)
+    sns.boxplot(x='algo', y=loss, data=df_co)
 
 @memory.cache
-def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
-                 method="glm", repetitions=10, show=False, **kwargs):
+def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
+                 method="glm", repetitions=10, show=False, loss = '|1-tau_dr|', **kwargs):
     # return baseline with X, X_imp, Z_perm
 
     df_base = pd.DataFrame()
     for seed in range(repetitions):
         d_tau = exp_baseline(model=model, n=n, d=d, p=p,
-                             prop_miss=prop_miss, seed=seed,
+                             prop_miss=prop_miss, citcio = citcio, seed=seed,
                              method=method)
         df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols2']).T
         df['seed'] = seed
         df_base = pd.concat((df_base, df))
     df_base['algo'] = list(df_base.index)
-    df_base['1-tau_dr'] = abs(1-df_base['tau_dr'])
+    df_base['|1-tau_dr|'] = abs(1-df_base['tau_dr'])
+    df_base['|1-tau_ols|'] = abs(1-df_base['tau_ols'])
     df_base.head()
 
     
     if show:
         plt.figure(figsize=(15,5))
         plt.subplot(1,2,1)
-        sns.swarmplot(x='algo', y='1-tau_dr', data=df_base)
+        sns.swarmplot(x='algo', y=loss, data=df_base)
         plt.subplot(1,2,2)
-        sns.boxplot(x='algo', y='1-tau_dr', data=df_base)
+        sns.boxplot(x='algo', y=loss, data=df_base)
     return df_base
 
 
 
-def test_get_ps_y01_hat(n=1000, p=2, d=3):
+def test_get_ps_y01_hat(n=1000, p=2, d=3, citcio = False):
 
     for gen_name, gen_data in zip(['gen_lrmf','gen_dlvm'], [gen_lrmf, gen_dlvm]):
         print('-----------', gen_name, '----------')
@@ -84,7 +91,7 @@ def test_get_ps_y01_hat(n=1000, p=2, d=3):
         r2_y_x = []
         for i in range(5):
 
-            Z, X, w, y, ps = gen_data(n=n, p=p, d=d, seed=i)
+            Z, X, w, y, ps = gen_data(n=n, p=p, d=d, citcio = citcio, prop_miss = 0, seed=i)
 
             ps_hat, y0_hat, y1_hat = get_ps_y01_hat(Z, w, y)
 
@@ -108,6 +115,7 @@ def test_get_ps_y01_hat(n=1000, p=2, d=3):
             '+-', np.round(np.std(r2_x),4))
         print('R2_score of y_hat (with X)=', np.round(np.mean(r2_y_x),4),
             '+-', np.round(np.std(r2_y_x),4))
+
 
         # assert np.mean(r2) > .9
         # assert np.mean(r2_y) > .9

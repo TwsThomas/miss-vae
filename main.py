@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
+from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi
 from generate_data import gen_lrmf, ampute, gen_dlvm
 
 from joblib import Memory
@@ -10,14 +10,14 @@ memory = Memory('cache_dir', verbose=0)
 
 
 @memory.cache
-def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
+def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
 
     if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
+        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, seed = seed)
+        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     else:
         raise NotImplementedError("Other data generating models not implemented here yet.")
         
@@ -53,7 +53,24 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
     
     return tau
 
-def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
+def exp_mi(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0, m = 10,
+        d_cevae=20, n_epochs=402,
+        method="glm", **kwargs):
+
+    if model == "lrmf":
+        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
+    elif model == "dlvm":
+        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
+    else:
+        raise NotImplementedError("Other data generating models not implemented here yet.")
+        
+    X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
+
+    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi = tau_mi(X_miss, w, y, m = m, method = method)
+    
+    return tau_dr_mi, tau_ols_mi, tau_ols_ps_mi
+
+def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
 
@@ -62,9 +79,9 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
     from sklearn.preprocessing import Imputer
 
     if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
+        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, seed = seed)
+        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     else:
         raise NotImplementedError("Other data generating models not implemented here yet.")
         
@@ -84,16 +101,16 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
     return res_tau_dr, res_tau_dr_true_ps
 
 
-def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
+def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
         d_miwae=3, n_epochs=602, sig_prior=1,
 		method="glm", **kwargs):
 
     from miwae import miwae
 
     if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, seed = seed)
+        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, seed = seed)
+        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     else:
         raise NotImplementedError("Other data generating models not implemented here yet.")
         
@@ -132,6 +149,18 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, seed=0,
 
 if __name__ == '__main__':
 
-    print('test exp with default arguments on miwae')
-    tau = exp_miwae(n_epochs = 3)
+    #print('test exp with default arguments on miwae')
+    #tau = exp_miwae(n_epochs = 3)
+    #print('Everything went well.')
+
+
+    print('test exp with default arguments on mi without citcio')
+    tau = exp_mi(m=2)
+    print(tau)
     print('Everything went well.')
+
+    print('test exp with default arguments on mi with citcio')
+    tau = exp_mi(m=2, citcio=True)
+    print(tau)
+    print('Everything went well.')
+

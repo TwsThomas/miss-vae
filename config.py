@@ -14,5 +14,6 @@ args = {
     'n_epochs' : 602,
     'sig_prior' : 1,
     'method' : "glm",
-    'time' : -1
+    'time' : -1,
+    'citcio': False
 }
