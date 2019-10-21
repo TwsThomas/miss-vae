@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 
-from main import exp_miwae
+from main import exp_mi
 from config import args
 
 # set here params 
