@@ -40,17 +40,21 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
     # Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
 
     tau = dict()
-    for name, zhat in zip(['Z', 'X', 'X_imp_mean', 'X_imp_mice', 'Z_perm'],
-                          [Z, X, X_imp_mean, X_imp_mice, Z_perm]):
-
-        # Tau estimated on Zhat=E[Z|X]
-        ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)
-        res_tau_ols = tau_ols(zhat, w, y)
-        res_tau_ols_ps = tau_ols_ps(zhat, w, y)
-        res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
-
+    for name, zhat in zip(['Z', 'X', 'X_imp_mean'],#, 'X_imp_mice', 'Z_perm'],#, 'X_mi'],
+                          [Z, X, X_imp_mean]):#, X_imp_mice, Z_perm]):#, X_miss]):
+        
+        if name == 'X_mi':
+            res_tau_dr, res_tau_ols, res_tau_ols_ps = tau_mi(zhat, w, y, method=method)
+        
+        else:
+            ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)
+            res_tau_ols = tau_ols(zhat, w, y)
+            res_tau_ols_ps = tau_ols_ps(zhat, w, y)
+            res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+        
+        
         tau[name] = res_tau_dr, res_tau_ols, res_tau_ols_ps
-    
+
     return tau
 
 def exp_mi(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0, m = 10,

@@ -18,6 +18,7 @@ def load_results(expname = 'exp_15.2_10_choux.csv_temp'):
     df.drop(labels='Unnamed: 0', inplace=True, axis=1)
     df['|1-tau_dr|'] = abs(df['tau_dr'] - 1)
     df['|1-tau_ols|'] = abs(df['tau_ols'] - 1)
+    df['|1-tau_ols_ps|'] = abs(df['tau_ols_ps'] - 1)
     print('results.shape', df.shape)
     if 'algo' not in list(df.columns):
         df.loc[:,'algo'] = ['miwae_'] * df.shape[0]
@@ -29,28 +30,62 @@ def get_best_params(df_results, loss = '1-tau_dr'):
     # return best params and df.loc[best_params]
     # according to 'loss'
 
-    args_col = list(set(df_results.columns[:list(df_results.columns).index('time')]) - set(['seed']))
+    args_col = list(set(df_results.columns[:list(df_results.columns).index('tau_dr')]) - set(['seed','time']))
     best_params = (df_results.groupby(args_col)[loss].mean()).idxmin()
     best_params = {name:value for name,value in zip(args_col, best_params)}
     print('best_params=', best_params)
 
     df_best = df_results.loc[(df_results[args_col] == best_params).all(axis=1)]
+    
     return best_params, df_best
 
 
-def boxplot_with_baseline(df_results, loss = '1-tau_dr'):
+def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', hue = None, palette = None):
     # boxplot all baseline + best of df_results
-    best_params, df_best = get_best_params(df_results, loss = loss)
-    df_base = get_baseline(**best_params)
+    best_params = dict()
+    if hue is not None:
+        df_best = pd.DataFrame()
+        for param_hue in df_results[hue].unique():
+            best_params, df_best_hue = get_best_params(df_results.loc[df_results[hue] == param_hue], loss = loss)
+            df_best = pd.concat((df_best, df_best_hue))
 
-    df_co = pd.concat((df_best, df_base), sort=True)
+        df_base = pd.DataFrame()
+        for param_hue in df_results[hue].unique():
+            best_params_hue = best_params.copy()
+            best_params_hue[hue] = param_hue
+            df_base_hue = get_baseline(**best_params_hue)
+            df_base_hue[hue] = param_hue
+            
+            df_base = pd.concat((df_base, df_base_hue))
+    else:
+        best_params, df_best = get_best_params(df_results, loss = loss)
+        df_base = get_baseline(**best_params)
+                
+    
+
+    args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed',hue]))
+    best_params_list = []
+    for key, value in best_params.items():
+        temp = [key,value]
+        if key in args_col:
+            best_params_list.append(value)
+    df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
+
+    #print(df_mice)
+    df_co = pd.concat((df_best, df_base, df_mice), sort=True)
     # sns.boxplot(x='algo', y='1-tau_dr', data=df_co)
 
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
-    sns.swarmplot(x='algo', y=loss, data=df_co)
+    sns.swarmplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+          ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
     plt.subplot(1,2,2)
-    sns.boxplot(x='algo', y=loss, data=df_co)
+    sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+          ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+    # plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    #      fancybox=True, shadow=True, ncol=3)
 
 @memory.cache
 def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
@@ -62,12 +97,13 @@ def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
         d_tau = exp_baseline(model=model, n=n, d=d, p=p,
                              prop_miss=prop_miss, citcio = citcio, seed=seed,
                              method=method)
-        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols2']).T
+        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps']).T
         df['seed'] = seed
         df_base = pd.concat((df_base, df))
     df_base['algo'] = list(df_base.index)
     df_base['|1-tau_dr|'] = abs(1-df_base['tau_dr'])
     df_base['|1-tau_ols|'] = abs(1-df_base['tau_ols'])
+    df_base['|1-tau_ols_ps|'] = abs(1-df_base['tau_ols_ps'])
     df_base.head()
 
     
