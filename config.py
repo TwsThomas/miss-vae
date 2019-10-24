@@ -15,5 +15,6 @@ args = {
     'sig_prior' : 1,
     'method' : "glm",
     'time' : -1,
-    'citcio': False
+    'citcio': False,
+    'add_wy': False
 }

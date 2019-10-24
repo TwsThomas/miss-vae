@@ -25,21 +25,31 @@ import os
 
 
 def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
-          num_samples_zmul=200, n_epochs = 602):
+          num_samples_zmul=200, n_epochs = 602, add_wy = False, w = None, y = None):
   # return xhat, zhat, zhat_mul
   # # ! xhat_rescaled is NOT computed (x is never scaled !)
 
   np.random.seed(1234)
   tf.set_random_seed(1234)
 
+
   n = X_miss.shape[0] # number of observations
   p = X_miss.shape[1] # number of features
+
+  pwy = 0
+  if add_wy:
+    pwy = 2
+    X_miss = np.column_stack([X_miss, w, y])
+
   print('X_miss.shape',X_miss.shape)
   X_miss = np.copy(X_miss)
   mask = np.isfinite(X_miss) # binary mask that indicates which values are missing
 
   print('mask.shape', mask.shape)
   
+  
+
+
   # ##########
 
   xhat_0 = np.copy(X_miss)
@@ -54,14 +64,15 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
     # xfull = np.concatenate((xfull, mask_mod), axis=1)
     mask = np.concatenate((mask, np.ones_like(mask).astype(bool)), axis = 1)
     p = p*2
+    pwy = pwy*2
     print('[data mask]', xhat_0.shape)
 
   # ##########
 
-  x = tf.placeholder(tf.float32, shape=[None, p]) # Placeholder for xhat_0
+  x = tf.placeholder(tf.float32, shape=[None, p+pwy]) # Placeholder for xhat_0
   learning_rate = tf.placeholder(tf.float32, shape=[])
   batch_size = tf.shape(x)[0]
-  xmask = tf.placeholder(tf.bool, shape=[None, p])
+  xmask = tf.placeholder(tf.bool, shape=[None, p+pwy])
   K= tf.placeholder(tf.int32, shape=[]) # Placeholder for the number of importance weights
 
   # ##########
@@ -77,7 +88,7 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
     tfkl.InputLayer(input_shape=[d_miwae,]),
     tfkl.Dense(h_miwae, activation=sigma,kernel_initializer="orthogonal"),
     tfkl.Dense(h_miwae, activation=sigma,kernel_initializer="orthogonal"),
-    tfkl.Dense(3*p,kernel_initializer="orthogonal") # the decoder will output both the mean, the scale, and the number of degrees of freedoms (hence the 3*p)
+    tfkl.Dense(3*(p+pwy),kernel_initializer="orthogonal") # the decoder will output both the mean, the scale, and the number of degrees of freedoms (hence the 3*p)
   ])
 
   # ##########
@@ -86,14 +97,14 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
   tiledmask_float = tf.cast(tiledmask,tf.float32)
   mask_not_float = tf.abs(-tf.cast(xmask,tf.float32))
 
-  iota = tf.Variable(np.zeros([1,p]),dtype=tf.float32)
+  iota = tf.Variable(np.zeros([1,p+pwy]),dtype=tf.float32)
   tilediota = tf.tile(iota,[batch_size,1])
   iotax = x + tf.multiply(tilediota,mask_not_float)
 
   # ##########
 
   encoder = tfk.Sequential([
-    tfkl.InputLayer(input_shape=[p,]),
+    tfkl.InputLayer(input_shape=[p+pwy,]),
     tfkl.Dense(h_miwae, activation=sigma,kernel_initializer="orthogonal"),
     tfkl.Dense(h_miwae, activation=sigma,kernel_initializer="orthogonal"),
     tfkl.Dense(3*d_miwae,kernel_initializer="orthogonal")
@@ -110,11 +121,11 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
   # ##########
 
   out_decoder = decoder(zgivenx_flat)
-  all_means_obs_model = out_decoder[..., :p]
-  all_scales_obs_model = tf.nn.softplus(out_decoder[..., p:(2*p)]) + 0.001
-  all_degfreedom_obs_model = tf.nn.softplus(out_decoder[..., (2*p):(3*p)]) + 3
+  all_means_obs_model = out_decoder[..., :p+pwy]
+  all_scales_obs_model = tf.nn.softplus(out_decoder[..., p:(2*(p+pwy))]) + 0.001
+  all_degfreedom_obs_model = tf.nn.softplus(out_decoder[..., (2*(p+pwy)):(3*(p+pwy))]) + 3
   all_log_pxgivenz_flat = tfd.StudentT(loc=tf.reshape(all_means_obs_model,[-1,1]),scale=tf.reshape(all_scales_obs_model,[-1,1]),df=tf.reshape(all_degfreedom_obs_model,[-1,1])).log_prob(data_flat)
-  all_log_pxgivenz = tf.reshape(all_log_pxgivenz_flat,[K*batch_size,p])
+  all_log_pxgivenz = tf.reshape(all_log_pxgivenz_flat,[K*batch_size,p+pwy])
 
   # ##########
 
@@ -135,7 +146,7 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
   # ##########
 
   imp_weights = tf.nn.softmax(logpxobsgivenz + logpz - logq,0) # these are w_1,....,w_L for all observations in the batch
-  xms = tf.reshape(xgivenz.mean(),[K,batch_size,p])
+  xms = tf.reshape(xgivenz.mean(),[K,batch_size,p+pwy])
   xm=tf.einsum('ki,kij->ij', imp_weights, xms) 
 
   # ##########
@@ -146,7 +157,7 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
 
   sir_logits = tf.transpose(logpxobsgivenz + logpz - logq)
 #   sirx = tfd.Categorical(logits = sir_logits).sample(num_samples_xmul)
-  xmul = tf.reshape(xgivenz.sample(),[K,batch_size,p])
+  xmul = tf.reshape(xgivenz.sample(),[K,batch_size,p+pwy])
 
   sirz = tfd.Categorical(logits = sir_logits).sample(num_samples_zmul)
   zmul = tf.reshape(zgivenx,[K,batch_size,d_miwae])
@@ -178,14 +189,14 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
             print('MIWAE likelihood bound  %g' %-losstrain)
             for i in range(n): # We impute the observations one at a time for memory reasons
                 # # Single imputation:
-                xhat[i,:][~mask[i,:]]=xm.eval(feed_dict={x: xhat_0[i,:].reshape([1,p]), K:10000, xmask: mask[i,:].reshape([1,p])})[~mask[i,:].reshape([1,p])]
+                xhat[i,:][~mask[i,:]]=xm.eval(feed_dict={x: xhat_0[i,:].reshape([1,p+pwy]), K:10000, xmask: mask[i,:].reshape([1,p+pwy])})[~mask[i,:].reshape([1,p+pwy])]
                 # # Multiple imputation:
-                # si, xmu = sess.run([sirx, xmul],feed_dict={x: xhat_0[i,:].reshape([1,p]), K:10000, xmask: mask[i,:].reshape([1,p])})
-                # x_mul_imp[:,i,:][~np.tile(mask[i,:].reshape([1,p]),[num_samples_xmul,1])] = np.squeeze(xmu[si,:,:])[~np.tile(mask[i,:].reshape([1,p]),[num_samples_xmul,1])]
+                # si, xmu = sess.run([sirx, xmul],feed_dict={x: xhat_0[i,:].reshape([1,p+pwy]), K:10000, xmask: mask[i,:].reshape([1,p+pwy])})
+                # x_mul_imp[:,i,:][~np.tile(mask[i,:].reshape([1,p+pwy]),[num_samples_xmul,1])] = np.squeeze(xmu[si,:,:])[~np.tile(mask[i,:].reshape([1,p+pwy]),[num_samples_xmul,1])]
                 # Dimension reduction:
-                zhat[i,:] = z_hat.eval(feed_dict={x: xhat_0[i,:].reshape([1,p]), K:10000, xmask: mask[i,:].reshape([1,p])})
+                zhat[i,:] = z_hat.eval(feed_dict={x: xhat_0[i,:].reshape([1,p+pwy]), K:10000, xmask: mask[i,:].reshape([1,p+pwy])})
                 # Z|X* sampling:
-                si, zmu = sess.run([sirz, zmul],feed_dict={x: xhat_0[i,:].reshape([1,p]), K:10000, xmask: mask[i,:].reshape([1,p])})    
+                si, zmu = sess.run([sirz, zmul],feed_dict={x: xhat_0[i,:].reshape([1,p+pwy]), K:10000, xmask: mask[i,:].reshape([1,p+pwy])})    
                 zhat_mul[:,i,:] = np.squeeze(zmu[si,:,:])
             # err = np.array([mse(xhat,xfull,mask)])
             # mse_train = np.append(mse_train,err,axis=0)

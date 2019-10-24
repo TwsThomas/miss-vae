@@ -106,7 +106,7 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
 
 
 def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
-        d_miwae=3, n_epochs=602, sig_prior=1,
+        d_miwae=3, n_epochs=602, sig_prior=1, add_wy = False,
 		method="glm", **kwargs):
 
     from miwae import miwae
@@ -120,8 +120,12 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
         
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
-    xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
-                                 n_epochs=n_epochs)
+    if add_wy:
+        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+                                     n_epochs=n_epochs, add_wy = add_wy, w=w, y=y)
+    else:
+        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+                                     n_epochs=n_epochs, add_wy = add_wy)
 
     # print('shape of outputs miwae:')
     # print('xhat.shape, zhat.shape, zhat_mul.shape:') 
