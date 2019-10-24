@@ -122,7 +122,7 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
 
   out_decoder = decoder(zgivenx_flat)
   all_means_obs_model = out_decoder[..., :p+pwy]
-  all_scales_obs_model = tf.nn.softplus(out_decoder[..., p:(2*(p+pwy))]) + 0.001
+  all_scales_obs_model = tf.nn.softplus(out_decoder[..., (p+pwy):(2*(p+pwy))]) + 0.001
   all_degfreedom_obs_model = tf.nn.softplus(out_decoder[..., (2*(p+pwy)):(3*(p+pwy))]) + 3
   all_log_pxgivenz_flat = tfd.StudentT(loc=tf.reshape(all_means_obs_model,[-1,1]),scale=tf.reshape(all_scales_obs_model,[-1,1]),df=tf.reshape(all_degfreedom_obs_model,[-1,1])).log_prob(data_flat)
   all_log_pxgivenz = tf.reshape(all_log_pxgivenz_flat,[K*batch_size,p+pwy])
