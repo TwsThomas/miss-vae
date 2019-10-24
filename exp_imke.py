@@ -7,7 +7,7 @@ from config import args
 
 # set here params 
 range_seed = np.arange(10)
-range_n = [5000]
+range_n = [1000, 5000]
 range_p = [5, 100]
 range_prop_miss = [0.1, 0.3]
 range_sig_prior = [0.1, 1, 10]
@@ -27,10 +27,10 @@ l_scores = []
 for args['seed'] in range_seed:
     for args['model'] in ["dlvm","lrmf"]:
         for args['citcio'] in [False, True]:
-            for args['sig_prior'] in range_sig_prior:
-                for args['n_epochs'] in range_n_epochs:
-                    for args['prop_miss'] in range_prop_miss:
-                        for args['n'] in range_n:
+            for args['n'] in range_n:
+                for args['sig_prior'] in range_sig_prior:
+                    for args['n_epochs'] in range_n_epochs:
+                        for args['prop_miss'] in range_prop_miss:
                             for args['p'] in range_p:     
                             
                                 t0 = time.time()
