@@ -144,7 +144,7 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     res_mul_tau_ols = []
     res_mul_tau_ols_ps = []
     for zhat_b in zhat_mul: 
-        ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)
+        ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat_b, w, y)
         res_mul_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method))
         res_mul_tau_ols.append(tau_ols(zhat_b, w, y))
         res_mul_tau_ols_ps.append(tau_ols_ps(zhat_b, w, y))
