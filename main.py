@@ -159,7 +159,7 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     dcor_zhat_mul = []
     for zhat_b in zhat_mul: 
         dcor_zhat_mul.append(dcor(Z, zhat_b))
-     
+    dcor_zhat_mul = np.mean(dcor_zhat_mul) 
 
     return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, dcor_zhat, dcor_zhat_mul
 
