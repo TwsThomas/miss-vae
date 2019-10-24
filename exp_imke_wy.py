@@ -20,7 +20,8 @@ exp_name = 'exp_24.1_10_wy'
 
 print('starting exp: ' + exp_name)
 args['add_wy'] = True
-l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps']
+l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps', 'dcor_zhat', 'dcor_zhat_mul']
+
 output = 'results/'+exp_name+'.csv'
 l_scores = []
 

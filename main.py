@@ -4,6 +4,7 @@ import pandas as pd
 
 from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi
 from generate_data import gen_lrmf, ampute, gen_dlvm
+from dcor import dcor
 
 from joblib import Memory
 memory = Memory('cache_dir', verbose=0)
@@ -152,7 +153,15 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     res_mul_tau_ols = np.mean(res_mul_tau_ols)
     res_mul_tau_ols_ps = np.mean(res_mul_tau_ols_ps)
 
-    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps
+    if Z.shape[1] == zhat.shape[1]:
+        dcor_zhat = dcor(Z, zhat)
+
+    dcor_zhat_mul = []
+    for zhat_b in zhat_mul: 
+        dcor_zhat_mul.append(dcor(Z, zhat_b))
+     
+
+    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, dcor_zhat, dcor_zhat_mul
 
 
 if __name__ == '__main__':
