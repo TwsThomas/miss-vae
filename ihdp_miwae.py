@@ -27,7 +27,7 @@ for args['set_id'] in range(1,11):
         for args['add_wy'] in [False, True]:
             for args['sig_prior'] in range_sig_prior:
                 for args['n_epochs'] in range_n_epochs:
-                    for args['d'] in range_d_miwae:     
+                    for args['d_miwae'] in range_d_miwae:     
                                 
                         t0 = time.time()
                         score = ihdp_miwae(**args)
