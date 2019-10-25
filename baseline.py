@@ -97,8 +97,21 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
          fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
 
     if save_plot is not None:
+        params_list = []
+        for key, value in best_params.items():
+            temp = [key,value]
+            params_list.append(list(temp))
+            
+        plt.figure(figsize=(7.5,5))
+        sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
+        if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+            plt.axhline(y=1, color='k')
+        #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+        #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+        lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+                          fancybox=True, shadow=False, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
         figname = str('./figures/'+'_'.join(''.join(map(str,x)) for x in params_list)+'_'+ 'metric'+loss+'_'+save_plot)
-        plt.savefig(figname,  bbox_extra_artists=(lgd1, lgd2), bbox_inches='tight',format='eps')
+        plt.savefig(figname, bbox_extra_artists=(lgd1,lgd2), bbox_inches='tight',format='pdf')
 
 @memory.cache
 def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
