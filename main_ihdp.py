@@ -118,10 +118,10 @@ def ihdp_miwae(set_id = 1, prop_miss=0.1, seed=0,
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
     if add_wy:
-        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+        xhat, zhat, zhat_mul = miwae(X_miss, d_miwae=d_miwae, sig_prior = sig_prior,
                                      n_epochs=n_epochs, add_wy = add_wy, w=w, y=y)
     else:
-        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+        xhat, zhat, zhat_mul = miwae(X_miss, d_miwae=d_miwae, sig_prior = sig_prior,
                                      n_epochs=n_epochs, add_wy = add_wy)
 
     # print('shape of outputs miwae:')
