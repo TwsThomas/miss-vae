@@ -21,6 +21,7 @@ def tau_mi(xmiss, w, y, m = 10, method = "glm"):
         imp = IterativeImputer(sample_posterior=True, random_state = i)
         ximp_mice = imp.fit_transform(xmiss)
         if method == "glm":
+            print(ximp_mice.shape)
             ps_hat, y0_hat, y1_hat = get_ps_y01_hat(ximp_mice, w, y)
             res_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method = method))
             res_tau_ols.append(tau_ols(ximp_mice, w, y))
@@ -42,7 +43,8 @@ def tau_grf(x, w, y):
 
 def get_ps_y01_hat(zhat, w, y):
     # predict with LR
-
+    w = w.reshape((-1,))
+    y = y.reshape((-1,))
     n,_ = zhat.shape
     lr = LogisticRegression(solver='lbfgs')
     lr.fit(zhat, w)
@@ -56,6 +58,8 @@ def get_ps_y01_hat(zhat, w, y):
     lr.fit(zhat[np.equal(w, np.zeros(n)),:], y[np.equal(w, np.zeros(n))])
     y0_hat = lr.predict(zhat)
 
+    y0_hat = y0_hat.reshape((-1,1))
+    y1_hat = y1_hat.reshape((-1,1))
     return ps_hat, y0_hat, y1_hat
 
 
@@ -84,6 +88,8 @@ def tau_ols(Z_hat, w, y):
     # ATE estimation via OLS regression 
 
     assert w.shape == y.shape
+
+    y = y.reshape((-1,))
     ZW = np.concatenate((Z_hat, w.reshape((-1,1))), axis=1)
     lr = LinearRegression()
     lr.fit(ZW, y)
@@ -97,6 +103,8 @@ def tau_ols_ps(zhat, w, y):
     # scores as additional predictor
 
     assert w.shape == y.shape
+    w = w.reshape((-1,))
+    y = y.reshape((-1,))
     lr = LogisticRegression(solver='lbfgs')
     lr.fit(zhat, w)
     ps_hat = lr.predict_proba(zhat)
