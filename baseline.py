@@ -40,7 +40,7 @@ def get_best_params(df_results, loss = '1-tau_dr'):
     return best_params, df_best
 
 
-def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', hue = None, palette = None):
+def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', hue = None, palette = None, save_plot = None):
     # boxplot all baseline + best of df_results
     best_params = dict()
     if hue is not None:
@@ -65,11 +65,14 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
 
     args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed',hue]))
     best_params_list = []
+    params_list = []
     for key, value in best_params.items():
         temp = [key,value]
         if key in args_col:
             best_params_list.append(value)
+            params_list.append(list(temp))
     df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
+
 
     #print(df_mice)
     df_co = pd.concat((df_best, df_base, df_mice), sort=True)
@@ -78,14 +81,37 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
     sns.swarmplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
-          ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+    if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+        plt.axhline(y=1, color='k')
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+    #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+    lgd1 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+         fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
     plt.subplot(1,2,2)
     sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
-          ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
-    # plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-    #      fancybox=True, shadow=True, ncol=3)
+    if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+        plt.axhline(y=1, color='k')
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+    #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+    lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+         fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
+
+    if save_plot is not None:
+        params_list = []
+        for key, value in best_params.items():
+            temp = [key,value]
+            params_list.append(list(temp))
+            
+        plt.figure(figsize=(7.5,5))
+        sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
+        if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+            plt.axhline(y=1, color='k')
+        #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+        #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+        lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+                          fancybox=True, shadow=False, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
+        figname = str('./figures/'+'_'.join(''.join(map(str,x)) for x in params_list)+'_'+ 'metric'+loss+'_'+save_plot)
+        plt.savefig(figname, bbox_extra_artists=(lgd1,lgd2), bbox_inches='tight',format='pdf')
 
 @memory.cache
 def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
