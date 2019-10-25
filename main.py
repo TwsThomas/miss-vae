@@ -80,7 +80,7 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
 		method="glm", **kwargs):
 
     # import here because of differents sklearn version used
-    from cevea_tf import cevae_tf
+    from cevae_tf import cevae_tf
     from sklearn.preprocessing import Imputer
 
     if model == "lrmf":
@@ -93,7 +93,7 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
     X_imp = Imputer().fit_transform(X_miss)
     
-    y0_hat, y1_hat = cevae_tf(X_imp, w, y, d_cevea=d_cevae,
+    y0_hat, y1_hat = cevae_tf(X_imp, w, y, d_cevae=d_cevae,
                              n_epochs=n_epochs)
 
     # Tau estimated on Zhat=E[Z|X]
