@@ -71,6 +71,8 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
         if key in args_col:
             best_params_list.append(value)
             params_list.append(list(temp))
+    print(best_params_list)
+    print(args_col)
     df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
 
 
@@ -101,7 +103,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
         for key, value in best_params.items():
             temp = [key,value]
             params_list.append(list(temp))
-            
+
         plt.figure(figsize=(7.5,5))
         sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
         if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
