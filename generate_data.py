@@ -147,7 +147,14 @@ def gen_outcome(Z, w, tau, link = "linear", sd=10):
 # Generate missing values in X such that, on average, X contains 100*prop_miss missing values
 def ampute(X, prop_miss = 0.1, seed=0):
     np.random.seed(seed)
+    # X_miss = np.copy(X)
+    # mask = np.random.binomial(1,prop_miss, size=X.shape)
+    # X_miss[mask] = np.nan
+    n,p = X.shape
     X_miss = np.copy(X)
-    mask = np.random.binomial(1,prop_miss, size=X.shape)
-    X_miss[mask] = np.nan
+    X_miss_flat = X_miss.flatten()
+    miss_pattern = np.random.choice(n*p, np.floor(n*p*prop_miss).astype(np.int), replace=False)
+    X_miss_flat[miss_pattern] = np.nan 
+    X_miss = X_miss_flat.reshape([n,p]) # in xmiss, the missing values are represented by nans
+    mask = np.isfinite(X_miss)
     return X_miss
