@@ -7,7 +7,7 @@ from config import args
 
 # set here params 
 range_seed = np.arange(10)
-range_n = [5000, ]
+range_n = [1000,5000, ]
 range_p = [5, 100]
 range_prop_miss = [0.1, 0.3, 0]
 #range_sig_prior = [0.1, 1, 10]
@@ -22,8 +22,8 @@ l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps']
 output = 'results/2019-10-24_'+exp_name+'.csv'
 l_scores = []
 
-for args['model'] in ["dlvm","lrmf"]:
-    for args['citcio'] in [True, False]:
+for args['citcio'] in [False, True]:
+    for args['model'] in ["dlvm","lrmf"]:
         for args['seed'] in range_seed:
             for args['prop_miss'] in range_prop_miss:
                 for args['n'] in range_n:
