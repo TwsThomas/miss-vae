@@ -2,6 +2,7 @@
 from metrics import *
 from generate_data import *
 from main import exp_baseline
+from main_ihdp import ihdp_baseline
 
 from collections import defaultdict
 import matplotlib.pyplot as plt
@@ -36,11 +37,14 @@ def get_best_params(df_results, loss = '1-tau_dr'):
     print('best_params=', best_params)
 
     df_best = df_results.loc[(df_results[args_col] == best_params).all(axis=1)]
-    
+
     return best_params, df_best
 
 
-def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', hue = None, palette = None, save_plot = None):
+def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue = None,
+                          baseline = 'exp', 
+                          palette = None, save_plot = None,
+                          ground_truth = pd.DataFrame({'tau': [1]})):
     # boxplot all baseline + best of df_results
     best_params = dict()
     if hue is not None:
@@ -53,15 +57,20 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
         for param_hue in df_results[hue].unique():
             best_params_hue = best_params.copy()
             best_params_hue[hue] = param_hue
-            df_base_hue = get_baseline(**best_params_hue)
+            if baseline == 'exp':
+                df_base_hue = get_baseline(**best_params_hue)
+            else:
+                df_base_hue = get_ihdp_baseline(**best_params_hue)
             df_base_hue[hue] = param_hue
             
             df_base = pd.concat((df_base, df_base_hue))
     else:
         best_params, df_best = get_best_params(df_results, loss = loss)
-        df_base = get_baseline(**best_params)
-                
-    
+        if baseline == 'exp':
+            df_base = get_baseline(**best_params)
+        else:
+            df_base = get_ihdp_baseline(**best_params)
+
 
     args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed',hue]))
     best_params_list = []
@@ -71,20 +80,37 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
         if key in args_col:
             best_params_list.append(value)
             params_list.append(list(temp))
-    print(best_params_list)
-    print(args_col)
+    
     df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
+    print(df_mice)
 
-
-    #print(df_mice)
     df_co = pd.concat((df_best, df_base, df_mice), sort=True)
     # sns.boxplot(x='algo', y='1-tau_dr', data=df_co)
+
+    if any(np.isnan(df_co.loc[df_co['algo']=='mice', hue])):
+        i = 0
+        tmp = pd.DataFrame()
+        for param_hue in df_results[hue].unique():
+            tt = pd.DataFrame()
+            tt = df_co.loc[df_co['algo']=='mice']
+            tt[hue] = param_hue
+            if i > 0:
+                tmp = pd.concat((tmp,tt))
+            else:
+                tmp = tt.copy()
+            i += 1
+        df_co = pd.concat((df_co, tmp), sort= True)
+            
+
+    if 'set_id' in best_params.keys():
+        ground_truth = ground_truth.loc[ground_truth['set_id'] == best_params['set_id']]
+
 
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
     sns.swarmplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
     if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-        plt.axhline(y=1, color='k')
+        plt.axhline(y=np.mean(ground_truth['tau']), color='k')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
     lgd1 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
@@ -92,7 +118,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
     plt.subplot(1,2,2)
     sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
     if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-        plt.axhline(y=1, color='k')
+        plt.axhline(y=np.mean(ground_truth['tau']), color='k')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
     lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
@@ -107,7 +133,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = '1-tau_dr', h
         plt.figure(figsize=(7.5,5))
         sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
         if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-            plt.axhline(y=1, color='k')
+            plt.axhline(y=np.mean(ground_truth['tau']), color='k')
         #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
         #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
         lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
