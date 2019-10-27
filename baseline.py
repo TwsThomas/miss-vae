@@ -169,7 +169,30 @@ def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
         sns.boxplot(x='algo', y=loss, data=df_base)
     return df_base
 
+#@memory.cache
+def get_ihdp_baseline(set_id = 1, prop_miss=0.1, 
+                      method="glm", show=False, loss = '|1-tau_dr|', **kwargs):
+    # return baseline with X, X_imp, Z_perm
 
+    df_base = pd.DataFrame()
+    d_tau = ihdp_baseline(set_id = set_id,
+                          prop_miss=prop_miss, 
+                          method=method)
+    df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps']).T
+    df_base = pd.concat((df_base, df))
+    df_base['algo'] = list(df_base.index)
+    df_base['|1-tau_dr|'] = abs(1-df_base['tau_dr'])
+    df_base['|1-tau_ols|'] = abs(1-df_base['tau_ols'])
+    df_base['|1-tau_ols_ps|'] = abs(1-df_base['tau_ols_ps'])
+    df_base.head()
+
+    if show:
+        plt.figure(figsize=(15,5))
+        plt.subplot(1,2,1)
+        sns.swarmplot(x='algo', y=loss, data=df_base)
+        plt.subplot(1,2,2)
+        sns.boxplot(x='algo', y=loss, data=df_base)
+    return df_base
 
 def test_get_ps_y01_hat(n=1000, p=2, d=3, citcio = False):
 
