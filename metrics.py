@@ -68,7 +68,10 @@ def tau_dr(y, w, y0_hat=None, y1_hat=None, ps_hat=None, confounders = None, meth
     if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
                         for the two response surfaces and the propensity scores respectively
     if method == "grf": no need to provide any fitted values but need to provide confounders matrix"""
-
+    y = y.reshape((-1,))
+    y0_hat = y0_hat.reshape((-1,))
+    y1_hat = y1_hat.reshape((-1,))
+    w = w.reshape((-1,))
     assert y0_hat.shape == y.shape
     assert y1_hat.shape == y.shape
     assert w.shape == y.shape
