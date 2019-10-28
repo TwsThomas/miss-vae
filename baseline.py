@@ -80,9 +80,8 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         if key in args_col:
             best_params_list.append(value)
             params_list.append(list(temp))
-    
+            
     df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
-    print(df_mice)
 
     df_co = pd.concat((df_best, df_base, df_mice), sort=True)
     # sns.boxplot(x='algo', y='1-tau_dr', data=df_co)
