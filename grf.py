@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-import rpy2
-import rpy2.robjects as robjects
-import rpy2.robjects.packages as rpackages
-from rpy2.robjects.vectors import StrVector
+#import rpy2
+#import rpy2.robjects as robjects
+#import rpy2.robjects.packages as rpackages
+#from rpy2.robjects.vectors import StrVector
 
 
 # import R's utility package
-utils = rpackages.importr('utils')
+##utils = rpackages.importr('utils')
 # select a mirror for R packages
-utils.chooseCRANmirror(ind=1) # select the first mirror in the list
+
+#utils.chooseCRANmirror(ind=1) # select the first mirror in the list
 
 packnames = ('grf', 'hte')
 
