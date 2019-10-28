@@ -31,7 +31,7 @@ def get_best_params(df_results, loss = '1-tau_dr'):
     # return best params and df.loc[best_params]
     # according to 'loss'
 
-    args_col = list(set(df_results.columns[:list(df_results.columns).index('tau_dr')]) - set(['seed','time']))
+    args_col = list(set(df_results.columns[:list(df_results.columns).index('tau_dr')]) - set(['seed','set_id','time']))
     best_params = (df_results.groupby(args_col)[loss].mean()).idxmin()
     best_params = {name:value for name,value in zip(args_col, best_params)}
     print('best_params=', best_params)
@@ -64,6 +64,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
             df_base_hue[hue] = param_hue
             
             df_base = pd.concat((df_base, df_base_hue))
+
     else:
         best_params, df_best = get_best_params(df_results, loss = loss)
         if baseline == 'exp':
@@ -72,7 +73,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
             df_base = get_ihdp_baseline(**best_params)
 
 
-    args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed',hue]))
+    args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed','set_id',hue]))
     best_params_list = []
     params_list = []
     for key, value in best_params.items():
@@ -80,7 +81,6 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         if key in args_col:
             best_params_list.append(value)
             params_list.append(list(temp))
-            
     df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
 
     df_co = pd.concat((df_best, df_base, df_mice), sort=True)
@@ -101,23 +101,25 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         df_co = pd.concat((df_co, tmp), sort= True)
             
 
-    if 'set_id' in best_params.keys():
-        ground_truth = ground_truth.loc[ground_truth['set_id'] == best_params['set_id']]
+    # if 'set_id' in best_params.keys():
+    #     ground_truth = ground_truth.loc[ground_truth['set_id'] == best_params['set_id']]
 
 
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
     sns.swarmplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
-    if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-        plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+    #if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+    #    plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
+
     lgd1 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
          fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
     plt.subplot(1,2,2)
     sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
-    if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-        plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+    #if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+    #    plt.axhline(y=np.mean(ground_truth['tau']), color='k')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
     lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
@@ -170,19 +172,23 @@ def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
 
 #@memory.cache
 def get_ihdp_baseline(set_id = 1, prop_miss=0.1, 
-                      method="glm", show=False, loss = '|1-tau_dr|', **kwargs):
+                      method="glm", show=False, loss = '|1-tau_dr|', set_id_range = list(range(1,11)), **kwargs):
     # return baseline with X, X_imp, Z_perm
 
     df_base = pd.DataFrame()
-    d_tau = ihdp_baseline(set_id = set_id,
-                          prop_miss=prop_miss, 
-                          method=method)
-    df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps']).T
-    df_base = pd.concat((df_base, df))
+    for set_id in set_id_range:
+        d_tau = ihdp_baseline(set_id = set_id,
+                              prop_miss=prop_miss, 
+                              method=method)
+        X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+        tau = np.mean(X.iloc[:,4]  - X.iloc[:,3])
+        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps']).T
+        df['tau'] = tau
+        df_base = pd.concat((df_base, df))
     df_base['algo'] = list(df_base.index)
-    df_base['|1-tau_dr|'] = abs(1-df_base['tau_dr'])
-    df_base['|1-tau_ols|'] = abs(1-df_base['tau_ols'])
-    df_base['|1-tau_ols_ps|'] = abs(1-df_base['tau_ols_ps'])
+    df_base['|tau-tau_dr|'] = abs(df_base['tau']-df_base['tau_dr'])
+    df_base['|tau-tau_ols|'] = abs(df_base['tau']-df_base['tau_ols'])
+    df_base['|tau-tau_ols_ps|'] = abs(df_base['tau']-df_base['tau_ols_ps'])
     df_base.head()
 
     if show:
