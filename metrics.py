@@ -21,7 +21,6 @@ def tau_mi(xmiss, w, y, m = 10, method = "glm"):
         imp = IterativeImputer(sample_posterior=True, random_state = i)
         ximp_mice = imp.fit_transform(xmiss)
         if method == "glm":
-            print(ximp_mice.shape)
             ps_hat, y0_hat, y1_hat = get_ps_y01_hat(ximp_mice, w, y)
             res_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method = method))
             res_tau_ols.append(tau_ols(ximp_mice, w, y))
