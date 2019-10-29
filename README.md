@@ -18,6 +18,7 @@ $ scp tschmitt@drago:/home/tao/tschmitt/miss-vae/results/expname.csv /home/thoma
 ### Running cevae model :  
 
 ```bash
+conda config --append channels anaconda
 conda config --append channels conda-forge
 conda create -n cevae_env numpy pandas scikit-learn==0.18.1  tensorflow==1.1.0 progressbar==2.3 pip scipy tensorflow-probability
 conda activate cevae_env
