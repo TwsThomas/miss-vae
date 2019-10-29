@@ -6,7 +6,7 @@ from main_ihdp import ihdp_mi
 from config_ihdp import args
 
 # set here params 
-range_prop_miss = [0.1, 0.3, 0]
+range_prop_miss = [0.5,] #[0.1, 0.3, 0]
 #range_sig_prior = [0.1, 1, 10]
 #range_n_epochs = [10, 200, 600]
 
@@ -16,7 +16,7 @@ exp_name = 'ihdp_mi'
 args['m'] = 10
 print('starting exp: ' + exp_name)
 l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps']
-output = 'results/2019-10-25_'+exp_name+'.csv'
+output = 'results/2019-10-29_'+exp_name+'.csv'
 l_scores = []
 
 for args['set_id'] in range(1,11):
