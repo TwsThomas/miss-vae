@@ -190,7 +190,8 @@ if __name__ == '__main__':
         print(tau)
         print('Everything went well.')
 
-    print('showing baseline :::')
+    print('showing baseline with lrmf :::')
     from baseline import get_baseline
     args['full_baseline'] = True
+    args['model'] = 'lrmf'
     df_base = get_baseline(show=True, **args)
