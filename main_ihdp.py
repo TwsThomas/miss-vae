@@ -70,7 +70,7 @@ def ihdp_mi(set_id = 1, prop_miss=0.1, seed=0, m = 10,
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
 
-    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi = tau_mi(X_miss, w, y, m = m, method = method)
+    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi, = tau_mi(X_miss, w, y, m = m, method = method)
     
     return tau_dr_mi, tau_ols_mi, tau_ols_ps_mi
 
