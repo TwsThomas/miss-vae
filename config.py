@@ -16,5 +16,6 @@ args = {
     'method' : "glm",
     'time' : -1,
     'citcio': False,
-    'add_wy': False
+    'add_wy': False,
+    'm' : 10
 }

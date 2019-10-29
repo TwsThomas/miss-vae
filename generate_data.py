@@ -157,5 +157,5 @@ def ampute(X, prop_miss = 0.1, seed=0):
     miss_pattern = np.random.choice(n*p, np.floor(n*p*prop_miss).astype(np.int), replace=False)
     X_miss_flat[miss_pattern] = np.nan 
     X_miss = X_miss_flat.reshape([n,p]) # in xmiss, the missing values are represented by nans
-    mask = np.isfinite(X_miss)
+    # mask = np.isfinite(X_miss)
     return X_miss

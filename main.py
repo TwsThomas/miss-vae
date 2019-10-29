@@ -5,6 +5,7 @@ import pandas as pd
 from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi
 from generate_data import gen_lrmf, ampute, gen_dlvm
 from dcor import dcor
+from softimpute import get_U_softimpute
 
 from joblib import Memory
 memory = Memory('cache_dir', verbose=0)
@@ -12,7 +13,7 @@ memory = Memory('cache_dir', verbose=0)
 
 @memory.cache
 def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
-        d_cevae=20, n_epochs=402,
+        d_cevae=20, n_epochs=402, full_baseline=False,
 		method="glm", **kwargs):
 
     if model == "lrmf":
@@ -24,25 +25,34 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
         
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
     
-    X_imp_mean = np.zeros(X_miss.shape)
-    X_imp_mice = np.zeros(X_miss.shape)
-    try:
-        from sklearn.impute import SimpleImputer
-        X_imp_mean = SimpleImputer().fit_transform(X_miss)
-    except:
-        pass
-    try:
-        from sklearn.impute import IterativeImputer
-        X_imp_mice = IterativeImputer()().fit_transform(X_miss)
-    except:
-        pass
+        
+    from sklearn.impute import SimpleImputer
+    X_imp_mean = SimpleImputer().fit_transform(X_miss)
+        
     
     Z_perm = np.random.permutation(Z)
     # Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
 
+    algo_name = ['Z', 'X', 'X_imp_mean']
+    algo_ = [Z, X, X_imp_mean]
+
+    if full_baseline:
+        # complete the baseline 
+        U_soft = get_U_softimpute(X_miss)
+            # need try-except for sklearn version
+        try:
+            from sklearn.impute import IterativeImputer
+            X_imp_mice = IterativeImputer().fit_transform(X_miss)
+        except:
+            from sklearn.experimental import enable_iterative_imputer
+            from sklearn.impute import IterativeImputer
+            X_imp_mice = IterativeImputer().fit_transform(X_miss)
+
+        algo_name += ['X_imp_mice','U_soft', 'Z_perm']
+        algo_ += [X_imp_mice, U_soft, Z_perm]
+
     tau = dict()
-    for name, zhat in zip(['Z', 'X', 'X_imp_mean'],#, 'X_imp_mice', 'Z_perm'],#, 'X_mi'],
-                          [Z, X, X_imp_mean]):#, X_imp_mice, Z_perm]):#, X_miss]):
+    for name, zhat in zip(algo_name, algo_):
         
         if name == 'X_mi':
             res_tau_dr, res_tau_ols, res_tau_ols_ps = tau_mi(zhat, w, y, method=method)
@@ -166,18 +176,21 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
 
 if __name__ == '__main__':
 
-    #print('test exp with default arguments on miwae')
-    #tau = exp_miwae(n_epochs = 3)
-    #print('Everything went well.')
+    from config import args
+    args['m'] = 2
+    args['n_epochs'] = 3
 
-
-    print('test exp with default arguments on mi without citcio')
-    tau = exp_mi(m=2)
-    print(tau)
+    print('test exp with default arguments on miwae')
+    tau = exp_miwae(**args)
     print('Everything went well.')
 
-    print('test exp with default arguments on mi with citcio')
-    tau = exp_mi(m=2, citcio=True)
-    print(tau)
-    print('Everything went well.')
+    for args['citcio'] in [True, False]:
+        print('test exp with default arguments on mi with citcio=', args['citcio'])
+        tau = exp_mi(**args)
+        print(tau)
+        print('Everything went well.')
 
+    print('showing baseline :::')
+    from baseline import get_baseline
+    args['full_baseline'] = True
+    df_base = get_baseline(show=True, **args)
