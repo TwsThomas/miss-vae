@@ -125,6 +125,36 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
     lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
          fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
 
+    if hue is not None:
+        for param_hue in df_results[hue].unique():
+            print(hue,':', param_hue)
+            tmp = df_co.loc[df_co[hue]==param_hue]
+            print('MDC.process: mean ', loss,':', 
+                  np.mean(tmp.loc[tmp['algo']=='MDC.process', loss]), 
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.process', loss]))
+            print('MDC.mi: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='MDC.mi', loss]),
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.mi', loss]))
+            print('mice: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='mice', loss]),
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='mice', loss]))
+            print('mean_imp: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X_imp_mean', loss]),
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='X_imp_mean', loss]))
+            print('full: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X', loss]),
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='X', loss]))
+    else:
+        tmp = df_co
+        print('MDC.process: mean ', loss,':', 
+              np.mean(tmp.loc[tmp['algo']=='MDC.process', loss]), 
+              'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.process', loss]))
+        print('MDC.mi: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='MDC.mi', loss]),
+              'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.mi', loss]))
+        print('mice: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='mice', loss]),
+              'std: ',standard_error(tmp.loc[tmp['algo']=='mice', loss]))
+        print('mean_imp: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X_imp_mean', loss]),
+              'std: ',standard_error(tmp.loc[tmp['algo']=='X_imp_mean', loss]))
+        print('full: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X', loss]),
+              'std: ',standard_error(tmp.loc[tmp['algo']=='X', loss]))
+
+    
     if save_plot is not None:
         params_list = []
         for key, value in best_params.items():
@@ -254,6 +284,8 @@ def correlation_tau(df):
     plt.title('tau correlation')
     # plt.savefig('results/tau_correlation_xxx.png')
    
+def standard_error(x):
+    return np.std(x, ddof=1)/np.sqrt(len(x))
 
 if __name__ == '__main__':
     
