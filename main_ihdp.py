@@ -172,12 +172,13 @@ if __name__ == '__main__':
     #tau = ihdp_mi(m=2)
     # print('test ihdp with baseline')
     # tau = ihdp_baseline()
-    print('test ihdp with miwae')
-    tau = ihdp_miwae(n_epochs=2)
-    print(tau)
-    X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(1) + '.csv')
-    print('y1-y0:', np.mean((X.iloc[:,0]==1)*(X.iloc[:,1]  - X.iloc[:,2]) +(X.iloc[:,0]==0)*(X.iloc[:,2]  - X.iloc[:,1])))
-    print('mu1-mu0:', np.mean(X.iloc[:,4]  - X.iloc[:,3]))
+    # print('test ihdp with miwae')
+    # tau = ihdp_miwae(n_epochs=2)
+    # print(tau)
+    # for set_id in range(1,11):
+    #     X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+    #     #print('y1-y0:', np.mean((X.iloc[:,0]==1)*(X.iloc[:,1]  - X.iloc[:,2]) +(X.iloc[:,0]==0)*(X.iloc[:,2]  - X.iloc[:,1])))
+    #     print('mu1-mu0:', np.mean(X.iloc[:,4]  - X.iloc[:,3]))
 
     print('Everything went well.')
 
