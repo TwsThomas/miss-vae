@@ -86,21 +86,25 @@ def ihdp_cevae(set_id = 1, prop_miss=0.1, seed=0,
     y = np.array(X.iloc[:,1]).reshape((-1,1))
     
     X = np.array(X.iloc[:,5:])
-        
-    X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
-    X_imp = Imputer().fit_transform(X_miss)
     
+    if prop_miss > 0:
+        X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
+        X_imp = Imputer().fit_transform(X_miss)
+    else:
+        X_imp = X
+        
     y0_hat, y1_hat = cevae_tf(X_imp, w, y, d_cevae=d_cevae,
                              n_epochs=n_epochs)
 
     # Tau estimated on Zhat=E[Z|X]
-    ps_hat = np.ones(len(y0_hat)) / 2
+    #ps_hat = np.ones(len(y0_hat)) / 2
     # res_tau_ols = tau_ols(zhat, w, y)
     # res_tau_ols_ps = tau_ols_ps(zhat, w, y)
-    res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
-    res_tau_dr_true_ps = tau_dr(y, w, y0_hat, y1_hat, ps, method)
+    #res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+    #res_tau_dr_true_ps = tau_dr(y, w, y0_hat, y1_hat, ps, method)
 
-    return res_tau_dr, res_tau_dr_true_ps
+    res_tau = np.mean(y1_hat - y0_hat)
+    return res_tau
 
 
 def ihdp_miwae(set_id = 1, prop_miss=0.1, seed=0,
