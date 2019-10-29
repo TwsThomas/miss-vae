@@ -21,7 +21,6 @@ l_scores = []
 
 for args['set_id'] in range(1,11):
     for args['prop_miss'] in range_prop_miss:
-        args['d_miwae'] in range_d_miwae:     
                                 
         t0 = time.time()
         score = ihdp_miwae(**args)
