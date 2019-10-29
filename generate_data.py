@@ -1,7 +1,5 @@
 import numpy as np
 
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
 
 # Low rank matrix factorization
 def gen_lrmf(n=1000, d=3, p=100, tau = 1, link = "linear",
@@ -89,6 +87,9 @@ def get_dlvm_params(z, V, W, a, b, alpha, beta):
     return mu, Sigma
 
 def citcio_treat_out(X, prop_miss, seed, link, tau, sd):
+    from sklearn.experimental import enable_iterative_imputer
+    from sklearn.impute import IterativeImputer
+
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
     imp = IterativeImputer()
     X_imp = imp.fit_transform(X_miss)
