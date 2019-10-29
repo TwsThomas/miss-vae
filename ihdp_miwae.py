@@ -6,12 +6,12 @@ from main_ihdp import ihdp_miwae
 from config_ihdp import args
 
 # set here params 
-range_prop_miss = [0.1, 0.3, 0]
+range_prop_miss = [0.5,] # [0.1, 0.3, 0]
 range_sig_prior = [0.1, 1, 10]
 range_n_epochs = [10, 400]
 range_d_miwae = [10, 100]
 
-exp_name = 'ihdp_25.1_10'
+exp_name = 'ihdp_25.2_10'
 # 
 
 
