@@ -70,7 +70,7 @@ def ihdp_mi(set_id = 1, prop_miss=0.1, seed=0, m = 10,
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
 
-    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi, = tau_mi(X_miss, w, y, m = m, method = method)
+    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi, tau_resid_mi = tau_mi(X_miss, w, y, m = m, method = method)
     
     return tau_dr_mi, tau_ols_mi, tau_ols_ps_mi
 
@@ -168,8 +168,9 @@ if __name__ == '__main__':
     #print('Everything went well.')
 
 
-    #print('test ihdp with default arguments on mi')
-    #tau = ihdp_mi(m=2)
+    print('test ihdp with default arguments on mi')
+    tau = ihdp_mi(m=2)
+    print(tau)
     # print('test ihdp with baseline')
     # tau = ihdp_baseline()
     # print('test ihdp with miwae')
