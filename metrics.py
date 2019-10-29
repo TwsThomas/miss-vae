@@ -19,6 +19,7 @@ def tau_mi(xmiss, w, y, m = 10, method = "glm"):
     res_tau_dr = []
     res_tau_ols = []
     res_tau_ols_ps = []
+    res_tau_resid = []
     for i in range(m):
         imp = IterativeImputer(sample_posterior=True, random_state = i)
         ximp_mice = imp.fit_transform(xmiss)
@@ -27,13 +28,18 @@ def tau_mi(xmiss, w, y, m = 10, method = "glm"):
             res_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method = method))
             res_tau_ols.append(tau_ols(ximp_mice, w, y))
             res_tau_ols_ps.append(tau_ols_ps(ximp_mice, w, y))
+            lr = LinearRegression()
+            lr.fit(ximp_mice, y)
+            y_hat = lr.predict(ximp_mice)
+            res_tau_resid.append(tau_residuals(y, w, y_hat, ps_hat, method = method))
         else:
             res_tau_dr.append(tau_dr(y, w, confounders = ximp_mice, method = method))
+            res_tau_resid.append(tau_residuals(y, w, confounders = ximp_mice, method = method))
 
     if method == "glm":
-        return np.mean(res_tau_dr), np.mean(res_tau_ols), np.mean(res_tau_ols_ps)
+        return np.mean(res_tau_dr), np.mean(res_tau_ols), np.mean(res_tau_ols_ps), np.mean(res_tau_resid)
     else:
-        return np.mean(res_tau_dr), None, None
+        return np.mean(res_tau_dr), None, None, np.mean(res_tau_resid)
 
 def tau_mia(xmiss, w, y):
     return None
@@ -63,6 +69,26 @@ def get_ps_y01_hat(zhat, w, y):
     y1_hat = y1_hat.reshape((-1,1))
     return ps_hat, y0_hat, y1_hat
 
+def tau_residuals(y, w, y_hat=None, ps_hat=None, confounders = None, method = "glm"):
+    """Residuals on residuals regression for ATE estimation (a la Robinson (1988))
+    if method == "glm": provide fitted values y1_hat, y0_hat and ps_hat
+                        for the two response surfaces and the propensity scores respectively
+    if method == "grf": no need to provide any fitted values but need to provide confounders matrix"""
+    y = y.reshape((-1,))
+    y_hat = y_hat.reshape((-1,))
+    w = w.reshape((-1,))
+    assert y_hat.shape == y.shape
+    assert w.shape == y.shape
+
+    if method == "glm":
+        lr = LinearRegression(fit_intercept=False)
+        lr.fit((w - ps_hat).reshape((-1,1)), (y - y_hat).reshape((-1,1)))
+        tau = float(lr.coef_)
+    elif method == "grf":
+        raise NotImplementedError("Causal forest estimation not implemented here yet.")
+    else:
+        raise ValueError("'method' should be choosed between 'glm' and 'grf' in 'tau_dr', got %s", method)
+    return tau
 
 def tau_dr(y, w, y0_hat=None, y1_hat=None, ps_hat=None, confounders = None, method = "glm"):
     """Doubly robust ATE estimation

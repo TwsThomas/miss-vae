@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-
-from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi
+from sklearn.linear_model import LinearRegression
+from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi, tau_residuals
 from generate_data import gen_lrmf, ampute, gen_dlvm
 from dcor import dcor
 
@@ -45,16 +45,19 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
                           [Z, X, X_imp_mean]):#, X_imp_mice, Z_perm]):#, X_miss]):
         
         if name == 'X_mi':
-            res_tau_dr, res_tau_ols, res_tau_ols_ps = tau_mi(zhat, w, y, method=method)
+            res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid = tau_mi(zhat, w, y, method=method)
         
         else:
             ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)
             res_tau_ols = tau_ols(zhat, w, y)
             res_tau_ols_ps = tau_ols_ps(zhat, w, y)
             res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+            lr = LinearRegression()
+            lr.fit(zhat, y)
+            y_hat = lr.predict(zhat)
+            res_tau_resid = tau_residuals(y, w, y_hat, ps_hat, method)
         
-        
-        tau[name] = res_tau_dr, res_tau_ols, res_tau_ols_ps
+        tau[name] = res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid
 
     return tau
 
@@ -71,9 +74,9 @@ def exp_mi(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed
         
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
-    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi = tau_mi(X_miss, w, y, m = m, method = method)
+    tau_dr_mi, tau_ols_mi, tau_ols_ps_mi, tau_resid_mi = tau_mi(X_miss, w, y, m = m, method = method)
     
-    return tau_dr_mi, tau_ols_mi, tau_ols_ps_mi
+    return tau_dr_mi, tau_ols_mi, tau_ols_ps_mi, tau_resid_mi 
 
 def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
         d_cevae=20, n_epochs=402,
@@ -100,10 +103,12 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     ps_hat = np.ones(len(y0_hat)) / 2
     # res_tau_ols = tau_ols(zhat, w, y)
     # res_tau_ols_ps = tau_ols_ps(zhat, w, y)
-    res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
-    res_tau_dr_true_ps = tau_dr(y, w, y0_hat, y1_hat, ps, method)
+    #res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+    #res_tau_dr_true_ps = tau_dr(y, w, y0_hat, y1_hat, ps, method)
 
-    return res_tau_dr, res_tau_dr_true_ps
+    res_tau = np.mean(y1_hat - y0_hat)
+
+    return res_tau
 
 
 def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
@@ -138,20 +143,30 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     res_tau_ols = tau_ols(zhat, w, y)
     res_tau_ols_ps = tau_ols_ps(zhat, w, y)
     res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+    lr = LinearRegression()
+    lr.fit(zhat, y)
+    y_hat = lr.predict(zhat)
+    res_tau_resid = tau_residuals(y, w, y_hat, ps_hat, method)
 
     # Tau estimated on Zhat^(b), l=1,...,B sampled from posterior
     res_mul_tau_dr = []
     res_mul_tau_ols = []
     res_mul_tau_ols_ps = []
+    res_mul_tau_resid = []
     for zhat_b in zhat_mul: 
         ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat_b, w, y)
         res_mul_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method))
         res_mul_tau_ols.append(tau_ols(zhat_b, w, y))
         res_mul_tau_ols_ps.append(tau_ols_ps(zhat_b, w, y))
+        lr = LinearRegression()
+        lr.fit(zhat_b, y)
+        y_hat = lr.predict(zhat_b)
+        res_mul_tau_resid.append(tau_residuals(y, w, y_hat, ps_hat, method))
 
     res_mul_tau_dr = np.mean(res_mul_tau_dr)
     res_mul_tau_ols = np.mean(res_mul_tau_ols)
     res_mul_tau_ols_ps = np.mean(res_mul_tau_ols_ps)
+    res_mul_tau_resid = np.mean(res_mul_tau_resid)
 
     if Z.shape[1] == zhat.shape[1]:
         dcor_zhat = dcor(Z, zhat)
@@ -161,23 +176,30 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
         dcor_zhat_mul.append(dcor(Z, zhat_b))
     dcor_zhat_mul = np.mean(dcor_zhat_mul) 
 
-    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, dcor_zhat, dcor_zhat_mul
+    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, res_mul_tau_resid, dcor_zhat, dcor_zhat_mul
 
 
 if __name__ == '__main__':
 
-    #print('test exp with default arguments on miwae')
-    #tau = exp_miwae(n_epochs = 3)
-    #print('Everything went well.')
-
-
-    print('test exp with default arguments on mi without citcio')
-    tau = exp_mi(m=2)
+    print('test exp with default arguments on cevae')
+    tau = exp_cevae(n_epochs = 2,n=500, d=3, p=5)
     print(tau)
     print('Everything went well.')
 
-    print('test exp with default arguments on mi with citcio')
-    tau = exp_mi(m=2, citcio=True)
-    print(tau)
-    print('Everything went well.')
+
+    # print('test exp with default arguments on miwae')
+    # tau = exp_miwae(n_epochs = 2,n=500, d=3, p=5)
+    # print(tau)
+    # print('Everything went well.')
+
+
+    # print('test exp with default arguments on mi without citcio')
+    # tau = exp_mi(m=2)
+    # print(tau)
+    # print('Everything went well.')
+
+    # print('test exp with default arguments on mi with citcio')
+    # tau = exp_mi(m=2, citcio=True)
+    # print(tau)
+    # print('Everything went well.')
 
