@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi
+from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
 from generate_data import ampute
 from dcor import dcor
 
@@ -58,6 +58,7 @@ def ihdp_baseline(set_id=1, prop_miss=0.1, seed=0,
 def ihdp_mi(set_id = 1, prop_miss=0.1, seed=0, m = 10,
         d_cevae=20, n_epochs=402,
         method="glm", **kwargs):
+    from metrics import tau_mi
 
     X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
     w = np.array(X.iloc[:,0]).reshape((-1,1))
@@ -92,7 +93,7 @@ def ihdp_cevae(set_id = 1, prop_miss=0.1, seed=0,
         X_imp = Imputer().fit_transform(X_miss)
     else:
         X_imp = X
-        
+
     y0_hat, y1_hat = cevae_tf(X_imp, w, y, d_cevae=d_cevae,
                              n_epochs=n_epochs)
 

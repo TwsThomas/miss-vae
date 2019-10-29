@@ -3,8 +3,6 @@ import numpy as np
 
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
 
 import grf
 
@@ -14,6 +12,10 @@ def tau_mi(xmiss, w, y, m = 10, method = "glm"):
                         for every method, aggreggates the m estimations into one ATE estimator
     if method == "grf": computes DR with grf package on every imputed dataset and 
                         aggreggates the m estimations into one ATE estimator"""
+
+    from sklearn.experimental import enable_iterative_imputer
+    from sklearn.impute import IterativeImputer
+
     res_tau_dr = []
     res_tau_ols = []
     res_tau_ols_ps = []
