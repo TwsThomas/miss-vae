@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 
-from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_mi
-from generate_data import gen_lrmf, ampute, gen_dlvm
+from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
+from generate_data import ampute
 from dcor import dcor
 
 from joblib import Memory
@@ -11,17 +11,16 @@ memory = Memory('cache_dir', verbose=0)
 
 
 @memory.cache
-def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
+def ihdp_baseline(set_id=1, prop_miss=0.1, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
+    
+    X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+    w = np.array(X.iloc[:,0]).reshape((-1,1))
+    y = np.array(X.iloc[:,1]).reshape((-1,1))
+    
+    X = np.array(X.iloc[:,5:])
 
-    if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    else:
-        raise NotImplementedError("Other data generating models not implemented here yet.")
-        
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
     
     X_imp_mean = np.zeros(X_miss.shape)
@@ -37,12 +36,10 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
     except:
         pass
     
-    Z_perm = np.random.permutation(Z)
-    # Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
 
     tau = dict()
-    for name, zhat in zip(['Z', 'X', 'X_imp_mean'],#, 'X_imp_mice', 'Z_perm'],#, 'X_mi'],
-                          [Z, X, X_imp_mean]):#, X_imp_mice, Z_perm]):#, X_miss]):
+    for name, zhat in zip(['X', 'X_imp_mean'],#, 'X_imp_mice', 'Z_perm'],#, 'X_mi'],
+                          [X, X_imp_mean]):#, X_imp_mice, Z_perm]):#, X_miss]):
         
         if name == 'X_mi':
             res_tau_dr, res_tau_ols, res_tau_ols_ps = tau_mi(zhat, w, y, method=method)
@@ -58,24 +55,26 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
 
     return tau
 
-def exp_mi(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0, m = 10,
+def ihdp_mi(set_id = 1, prop_miss=0.1, seed=0, m = 10,
         d_cevae=20, n_epochs=402,
         method="glm", **kwargs):
+    from metrics import tau_mi
 
-    if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    else:
-        raise NotImplementedError("Other data generating models not implemented here yet.")
+    X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+    w = np.array(X.iloc[:,0]).reshape((-1,1))
+    y = np.array(X.iloc[:,1]).reshape((-1,1))
+    
+    X = np.array(X.iloc[:,5:])
         
+
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
+
 
     tau_dr_mi, tau_ols_mi, tau_ols_ps_mi = tau_mi(X_miss, w, y, m = m, method = method)
     
     return tau_dr_mi, tau_ols_mi, tau_ols_ps_mi
 
-def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
+def ihdp_cevae(set_id = 1, prop_miss=0.1, seed=0,
         d_cevae=20, n_epochs=402,
 		method="glm", **kwargs):
 
@@ -83,49 +82,51 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     from cevae_tf import cevae_tf
     from sklearn.preprocessing import Imputer
 
-    if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    else:
-        raise NotImplementedError("Other data generating models not implemented here yet.")
-        
-    X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
-    X_imp = Imputer().fit_transform(X_miss)
+    X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+    w = np.array(X.iloc[:,0]).reshape((-1,1))
+    y = np.array(X.iloc[:,1]).reshape((-1,1))
     
+    X = np.array(X.iloc[:,5:])
+    
+    if prop_miss > 0:
+        X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
+        X_imp = Imputer().fit_transform(X_miss)
+    else:
+        X_imp = X
+
     y0_hat, y1_hat = cevae_tf(X_imp, w, y, d_cevae=d_cevae,
                              n_epochs=n_epochs)
 
     # Tau estimated on Zhat=E[Z|X]
-    ps_hat = np.ones(len(y0_hat)) / 2
+    #ps_hat = np.ones(len(y0_hat)) / 2
     # res_tau_ols = tau_ols(zhat, w, y)
     # res_tau_ols_ps = tau_ols_ps(zhat, w, y)
-    res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
-    res_tau_dr_true_ps = tau_dr(y, w, y0_hat, y1_hat, ps, method)
+    #res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+    #res_tau_dr_true_ps = tau_dr(y, w, y0_hat, y1_hat, ps, method)
 
-    return res_tau_dr, res_tau_dr_true_ps
+    res_tau = np.mean(y1_hat - y0_hat)
+    return res_tau
 
 
-def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
+def ihdp_miwae(set_id = 1, prop_miss=0.1, seed=0,
         d_miwae=3, n_epochs=602, sig_prior=1, add_wy = False,
 		method="glm", **kwargs):
 
     from miwae import miwae
 
-    if model == "lrmf":
-        Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    elif model == "dlvm":
-        Z, X, w, y, ps = gen_dlvm(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
-    else:
-        raise NotImplementedError("Other data generating models not implemented here yet.")
+    X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+    w = np.array(X.iloc[:,0]).reshape((-1,1))
+    y = np.array(X.iloc[:,1]).reshape((-1,1))
+    
+    X = np.array(X.iloc[:,5:])
         
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
     if add_wy:
-        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+        xhat, zhat, zhat_mul = miwae(X_miss, d_miwae=d_miwae, sig_prior = sig_prior,
                                      n_epochs=n_epochs, add_wy = add_wy, w=w, y=y)
     else:
-        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+        xhat, zhat, zhat_mul = miwae(X_miss, d_miwae=d_miwae, sig_prior = sig_prior,
                                      n_epochs=n_epochs, add_wy = add_wy)
 
     # print('shape of outputs miwae:')
@@ -153,13 +154,9 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     res_mul_tau_ols = np.mean(res_mul_tau_ols)
     res_mul_tau_ols_ps = np.mean(res_mul_tau_ols_ps)
 
-    if Z.shape[1] == zhat.shape[1]:
-        dcor_zhat = dcor(Z, zhat)
+    dcor_zhat = np.nan
 
-    dcor_zhat_mul = []
-    for zhat_b in zhat_mul: 
-        dcor_zhat_mul.append(dcor(Z, zhat_b))
-    dcor_zhat_mul = np.mean(dcor_zhat_mul) 
+    dcor_zhat_mul = np.nan
 
     return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, dcor_zhat, dcor_zhat_mul
 
@@ -171,13 +168,16 @@ if __name__ == '__main__':
     #print('Everything went well.')
 
 
-    print('test exp with default arguments on mi without citcio')
-    tau = exp_mi(m=2)
+    #print('test ihdp with default arguments on mi')
+    #tau = ihdp_mi(m=2)
+    # print('test ihdp with baseline')
+    # tau = ihdp_baseline()
+    print('test ihdp with miwae')
+    tau = ihdp_miwae(n_epochs=2)
     print(tau)
-    print('Everything went well.')
+    X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(1) + '.csv')
+    print('y1-y0:', np.mean((X.iloc[:,0]==1)*(X.iloc[:,1]  - X.iloc[:,2]) +(X.iloc[:,0]==0)*(X.iloc[:,2]  - X.iloc[:,1])))
+    print('mu1-mu0:', np.mean(X.iloc[:,4]  - X.iloc[:,3]))
 
-    print('test exp with default arguments on mi with citcio')
-    tau = exp_mi(m=2, citcio=True)
-    print(tau)
     print('Everything went well.')
 

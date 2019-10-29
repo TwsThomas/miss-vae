@@ -23,7 +23,7 @@ from generate_data import gen_lrmf, ampute, gen_dlvm
 
 def fc_net(inp, layers, out_layers, scope, lamba=1e-3, activation=tf.nn.relu, reuse=None,
            weights_initializer=initializers.xavier_initializer(uniform=False)):
-    # utils for cevea
+    # utils for cevae
     with slim.arg_scope([slim.fully_connected],
                         activation_fn=activation,
                         normalizer_fn=None,
@@ -45,7 +45,7 @@ def fc_net(inp, layers, out_layers, scope, lamba=1e-3, activation=tf.nn.relu, re
 
 
 def get_y0_y1(sess, y, f0, f1, shape=(), L=1, verbose=True):
-    # utils for cevea
+    # utils for cevae
     y0, y1 = np.zeros(shape, dtype=np.float32), np.zeros(shape, dtype=np.float32)
     ymean = y.mean()
     for l in range(L):
@@ -60,7 +60,7 @@ def get_y0_y1(sess, y, f0, f1, shape=(), L=1, verbose=True):
     return y0, y1
 
 
-def cevae_tf(X, T, Y, n_epochs=100, early_stop = 10, d_cevea=20):
+def cevae_tf(X, T, Y, n_epochs=100, early_stop = 10, d_cevae=20):
 
     T, Y = T.reshape((-1,1)), Y.reshape((-1,1))
     args = dict()
@@ -72,7 +72,7 @@ def cevae_tf(X, T, Y, n_epochs=100, early_stop = 10, d_cevea=20):
     args['true_post'] = True
 
     M = None  # batch size during training
-    d = d_cevea  # latent dimension
+    d = d_cevae  # latent dimension
     lamba = 1e-4  # weight decay
     nh, h = 3, 200  # number and size of hidden layers
 
@@ -203,10 +203,10 @@ def cevae_tf(X, T, Y, n_epochs=100, early_stop = 10, d_cevea=20):
                 if logpvalid >= best_logpvalid:
                     print('Improved validation bound, old: {:0.3f}, new: {:0.3f}'.format(best_logpvalid, logpvalid))
                     best_logpvalid = logpvalid
-                    saver.save(sess, 'data/cevea_models/dlvm')
+                    saver.save(sess, 'data/cevae_models/dlvm')
 
 
-        saver.restore(sess, 'data/cevea_models/dlvm')
+        saver.restore(sess, 'data/cevae_models/dlvm')
         y0, y1 = get_y0_y1(sess, y_post, f0, f1, shape=Y.shape, L=100)
         y0, y1 = y0 * ys + ym, y1 * ys + ym
         
@@ -218,5 +218,5 @@ if __name__ == '__main__':
     
     Z, X, w, y, ps = gen_dlvm()
     y0, y1 = cevae_tf(X, w, y, n_epochs=10)
-    print('cevea_tf OKAY !')
+    print('cevae_tf OKAY !')
     print(y0.shape, y1.shape)
