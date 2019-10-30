@@ -7,7 +7,7 @@ from config import args
 
 # set here params 
 range_seed = np.arange(10)
-range_n = [1000,5000, ]
+range_n = [1000, ]
 range_p = [5, 100]
 range_prop_miss = [0.1, 0.3, 0]
 #range_sig_prior = [0.1, 1, 10]
@@ -18,8 +18,8 @@ exp_name = 'exp_mi'
 
 args['m'] = 10
 print('starting exp: ' + exp_name)
-l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps']
-output = 'results/2019-10-24_'+exp_name+'.csv'
+l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'tau_resid']
+output = 'results/2019-10-30_'+exp_name+'.csv'
 l_scores = []
 
 for args['citcio'] in [False, True]:
