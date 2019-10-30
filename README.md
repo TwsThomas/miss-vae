@@ -28,10 +28,6 @@ pip install edward==1.3.1 --user
 taskset -c 0-23 nice -5 python2 exp_cevae_name.py
 ```
 
-numpy==1.16.5 
- tensorflow-probability 
- python==2.7.16
-
 #### Other issues:
 pip3 issues, had to re-install : 
 $ curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
