@@ -108,8 +108,8 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
     sns.swarmplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
-    #if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-    #    plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+    if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+            plt.axhline(y=np.mean(ground_truth['tau']), color='k')
 
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
@@ -118,8 +118,8 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
          fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
     plt.subplot(1,2,2)
     sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
-    #if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-    #    plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+    if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+            plt.axhline(y=np.mean(ground_truth['tau']), color='k')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
     lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
@@ -182,7 +182,7 @@ def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
         d_tau = exp_baseline(model=model, n=n, d=d, p=p,
                              prop_miss=prop_miss, citcio = citcio, seed=seed,
                              method=method)
-        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps']).T
+        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps','tau_resid']).T
         df['seed'] = seed
         df_base = pd.concat((df_base, df))
     df_base['algo'] = list(df_base.index)
