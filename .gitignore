@@ -1,5 +1,8 @@
 results/*_temp
 cache_dir/*
+*.png*
+*.index
+*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
