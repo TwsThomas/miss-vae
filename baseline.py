@@ -173,16 +173,15 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         plt.savefig(figname, bbox_extra_artists=(lgd1,lgd2), bbox_inches='tight',format='pdf')
 
 @memory.cache
-def get_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
-                 method="glm", repetitions=10, show=False, loss = '|1-tau_dr|', **kwargs):
+def get_baseline(repetitions=10, show=False, loss = '|1-tau_dr|', **kwargs):
     # return baseline with X, X_imp, Z_perm
 
     df_base = pd.DataFrame()
     for seed in range(repetitions):
-        d_tau = exp_baseline(model=model, n=n, d=d, p=p,
-                             prop_miss=prop_miss, citcio = citcio, seed=seed,
-                             method=method)
+        kwargs['seed'] = seed
+        d_tau = exp_baseline(**kwargs)
         df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps','tau_resid']).T
+
         df['seed'] = seed
         df_base = pd.concat((df_base, df))
     df_base['algo'] = list(df_base.index)

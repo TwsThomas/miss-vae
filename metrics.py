@@ -8,6 +8,7 @@ import grf
 
 def tau_mi(xmiss, w, y, m = 10, method = "glm"):
     """ATE estimation via multiple imputation of incomplete covariates
+
     if method == "glm": computes DR, OLS and OLS with ps estimators on m imputed datasets and 
                         for every method, aggreggates the m estimations into one ATE estimator
     if method == "grf": computes DR with grf package on every imputed dataset and 
@@ -33,6 +34,7 @@ def tau_mi(xmiss, w, y, m = 10, method = "glm"):
             y_hat = lr.predict(ximp_mice)
             res_tau_resid.append(tau_residuals(y, w, y_hat, ps_hat, method = method))
         else:
+            print('method=',method, 'not implemented in "tau_mi"')
             res_tau_dr.append(tau_dr(y, w, confounders = ximp_mice, method = method))
             res_tau_resid.append(tau_residuals(y, w, confounders = ximp_mice, method = method))
 
@@ -49,7 +51,8 @@ def tau_grf(x, w, y):
 
 
 def get_ps_y01_hat(zhat, w, y):
-    # predict with LR
+    # predict ps, y0 and y1 with LR
+    # utils for method = 'glm'
     w = w.reshape((-1,))
     y = y.reshape((-1,))
     n,_ = zhat.shape
