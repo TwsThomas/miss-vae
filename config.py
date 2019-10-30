@@ -4,7 +4,7 @@
 args = dict()
 
 args = {
-    'model' : "lrmf",
+    'model' : "dlvm",
     'n' : 1000,
     'd' : 3,
     'p' : 100,
