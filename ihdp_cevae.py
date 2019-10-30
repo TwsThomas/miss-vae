@@ -3,13 +3,12 @@ import numpy as np
 import pandas as pd
 import time
 
-from main_ihdp import ihdp_miwae
+from main_ihdp import ihdp_cevae
 from config_ihdp import args
 
 # set here params 
-range_prop_miss = [0.1, 0.3, 0]
 
-exp_name = 'ihdp_29.1_10_cevae'
+exp_name = 'ihdp_30_10_cevae'
 # 
 
 
@@ -21,18 +20,21 @@ output = 'results/'+exp_name+'.csv'
 l_scores = []
 
 for args['set_id'] in range(1,11):
-    for args['prop_miss'] in range_prop_miss:
-                                
-        t0 = time.time()
-        score = ihdp_miwae(**args)
-        args['time'] = int(time.time() - t0)
-        l_scores.append(np.concatenate((list(args.values()),score)))
-        print('ihdp with ', args)
-        print('........... DONE')
-        print('in ', int(args["time"]) , ' s  \n\n')
+    for args['n'] in [1000, 5000]:
+        for args['citcio'] in [False, True]:
+            for args['p'] in [5, 100]:
+                for args['prop_miss'] in [0, 0.1, 0.3]:
+                    for args['model'] in ["dlvm", "lrmf"]:
+                        t0 = time.time()
+                        score = ihdp_cevae(**args)
+                        args['time'] = int(time.time() - t0)
+                        l_scores.append(np.concatenate((list(args.values()),score)))
+                        print('ihdp with ', args)
+                        print('........... DONE')
+                        print('in ', int(args["time"]) , ' s  \n\n')
 
-    score_data = pd.DataFrame(l_scores, columns=list(args.keys()) + l_tau)
-    score_data.to_csv(output + '_temp')
+                score_data = pd.DataFrame(l_scores, columns=list(args.keys()) + l_tau)
+                score_data.to_csv(output + '_temp')
 
 print('saving ' +exp_name + 'at: ' + output)
 score_data.to_csv(output)
