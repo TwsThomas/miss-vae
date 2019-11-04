@@ -108,3 +108,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ihdp csv files 
+csv/
+
+# automatically generated figures
+Figures/
