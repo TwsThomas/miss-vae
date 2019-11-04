@@ -161,25 +161,36 @@ def ihdp_miwae(set_id = 1, prop_miss=0.1, seed=0,
     res_tau_ols_ps = tau_ols_ps(zhat, w, y)
     res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
 
+    lr = LinearRegression()
+    lr.fit(zhat, y)
+    y_hat = lr.predict(zhat)
+    res_tau_resid = tau_residuals(y, w, y_hat, ps_hat, method)
+
     # Tau estimated on Zhat^(b), l=1,...,B sampled from posterior
     res_mul_tau_dr = []
     res_mul_tau_ols = []
     res_mul_tau_ols_ps = []
+    res_mul_tau_resid = []
     for zhat_b in zhat_mul: 
         ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat_b, w, y)
         res_mul_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method))
         res_mul_tau_ols.append(tau_ols(zhat_b, w, y))
         res_mul_tau_ols_ps.append(tau_ols_ps(zhat_b, w, y))
+        lr = LinearRegression()
+        lr.fit(zhat, y)
+        y_hat = lr.predict(zhat_b)
+        res_mul_tau_resid = tau_residuals(y, w, y_hat, ps_hat, method)
 
     res_mul_tau_dr = np.mean(res_mul_tau_dr)
     res_mul_tau_ols = np.mean(res_mul_tau_ols)
     res_mul_tau_ols_ps = np.mean(res_mul_tau_ols_ps)
+    res_mul_tau_resid = np.mean(res_mul_tau_resid)
 
     dcor_zhat = np.nan
 
     dcor_zhat_mul = np.nan
 
-    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, dcor_zhat, dcor_zhat_mul
+    return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, res_mul_tau_resid, dcor_zhat, dcor_zhat_mul
 
 
 if __name__ == '__main__':
