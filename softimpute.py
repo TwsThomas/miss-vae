@@ -40,7 +40,7 @@ def get_U_softimpute(X_obs, list_rank=None, boxplot=False, n_folds=3):
     
     Rank are cross selected (wrt MSE) in list_rank"""
     
-    assert np.sum(np.isnan(X_obs)) > 0, 'X_obs do not contains any nan in "get_U_softimpute"'
+    #assert np.sum(np.isnan(X_obs)) > 0, 'X_obs do not contains any nan in "get_U_softimpute"'
     
     best_mae = float('inf')
     best_U = None
