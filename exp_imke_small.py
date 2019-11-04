@@ -6,7 +6,7 @@ from main import exp_miwae
 from config import args
 
 # set here params 
-range_seed = np.arange(10)
+range_seed = np.arange(3,10)
 range_n = [1000, ]
 range_p = [5, 100]
 range_prop_miss = [0.1, 0.3, 0]
@@ -14,12 +14,12 @@ range_sig_prior = [0.1, 1, 10]
 range_n_epochs = [10, 400]
 # d_miwae = [10, 100]
 
-exp_name = 'exp_29.1_10_small'
+exp_name = 'exp_04.1_11_small'
 # 
 
 
 print('starting exp: ' + exp_name)
-l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps', 'dcor_zhat', 'dcor_zhat_mul']
+l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps','res_tau_resid', 'mul_tau_dr', 'mul_tau_ols', 'mul_tau_ols_ps','mul_res_tau_resid', 'dcor_zhat', 'dcor_zhat_mul']
 
 output = 'results/'+exp_name+'.csv'
 l_scores = []
