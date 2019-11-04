@@ -42,7 +42,7 @@ def get_best_params(df_results, loss = '1-tau_dr'):
 
 
 def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue = None,
-                          baseline = 'exp', 
+                          baseline = 'exp', full_baseline = False,
                           palette = None, save_plot = None,
                           ground_truth = pd.DataFrame({'tau': [1]})):
     # boxplot all baseline + best of df_results
@@ -57,6 +57,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         for param_hue in df_results[hue].unique():
             best_params_hue = best_params.copy()
             best_params_hue[hue] = param_hue
+            best_params_hue['full_baseline'] = full_baseline
             if baseline == 'exp':
                 df_base_hue = get_baseline(**best_params_hue)
             else:
@@ -67,6 +68,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
 
     else:
         best_params, df_best = get_best_params(df_results, loss = loss)
+        best_params['full_baseline'] = full_baseline
         if baseline == 'exp':
             df_base = get_baseline(**best_params)
         else:
@@ -134,6 +136,8 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
                   'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.process', loss]))
             print('MDC.mi: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='MDC.mi', loss]),
                   'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.mi', loss]))
+            print('MF: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='Z_mf', loss]),
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='Z_mf', loss]))
             print('mice: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='mice', loss]),
                   'std: ',standard_error(tmp.loc[tmp['algo']=='mice', loss]))
             print('mean_imp: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X_imp_mean', loss]),
@@ -147,6 +151,8 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
               'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.process', loss]))
         print('MDC.mi: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='MDC.mi', loss]),
               'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.mi', loss]))
+        print('MF: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='Z_mf', loss]),
+              'std: ',standard_error(tmp.loc[tmp['algo']=='Z_mf', loss]))
         print('mice: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='mice', loss]),
               'std: ',standard_error(tmp.loc[tmp['algo']=='mice', loss]))
         print('mean_imp: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X_imp_mean', loss]),
@@ -199,19 +205,18 @@ def get_baseline(repetitions=10, show=False, loss = '|1-tau_dr|', **kwargs):
         sns.boxplot(x='algo', y=loss, data=df_base)
     return df_base
 
-#@memory.cache
+@memory.cache
 def get_ihdp_baseline(set_id = 1, prop_miss=0.1, 
                       method="glm", show=False, loss = '|1-tau_dr|', set_id_range = list(range(1,11)), **kwargs):
     # return baseline with X, X_imp, Z_perm
 
     df_base = pd.DataFrame()
     for set_id in set_id_range:
-        d_tau = ihdp_baseline(set_id = set_id,
-                              prop_miss=prop_miss, 
-                              method=method)
+        kwargs['set_id'] = set_id
+        d_tau = ihdp_baseline(**kwargs)
         X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
         tau = np.mean(X.iloc[:,4]  - X.iloc[:,3])
-        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps']).T
+        df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps','tau_resid']).T
         df['tau'] = tau
         df_base = pd.concat((df_base, df))
     df_base['algo'] = list(df_base.index)

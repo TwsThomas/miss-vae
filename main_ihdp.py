@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 
-
-from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat
+from sklearn.linear_model import LinearRegression
+from metrics import tau_dr, tau_ols, tau_ols_ps, get_ps_y01_hat, tau_residuals
 from generate_data import ampute
 from dcor import dcor
+from softimpute import get_U_softimpute
 
 from joblib import Memory
 memory = Memory('cache_dir', verbose=0)
@@ -12,7 +13,7 @@ memory = Memory('cache_dir', verbose=0)
 
 @memory.cache
 def ihdp_baseline(set_id=1, prop_miss=0.1, seed=0,
-        d_cevae=20, n_epochs=402,
+        full_baseline = False,
 		method="glm", **kwargs):
     
     X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
@@ -37,21 +38,41 @@ def ihdp_baseline(set_id=1, prop_miss=0.1, seed=0,
         pass
     
 
+    algo_name = ['X', 'X_imp_mean']
+    algo_ = [X, X_imp_mean]
+
+    if full_baseline:
+        # complete the baseline 
+        Z_mf = get_U_softimpute(X_miss)
+            # need try-except for sklearn version
+        try:
+            from sklearn.impute import IterativeImputer
+            X_imp = IterativeImputer().fit_transform(X_miss)
+        except:
+            from sklearn.experimental import enable_iterative_imputer
+            from sklearn.impute import IterativeImputer
+            X_imp = IterativeImputer().fit_transform(X_miss)
+
+        algo_name += ['X_imp','Z_mf']#, 'Z_perm']
+        algo_ += [X_imp, Z_mf]#, Z_perm]
+
     tau = dict()
-    for name, zhat in zip(['X', 'X_imp_mean'],#, 'X_imp_mice', 'Z_perm'],#, 'X_mi'],
-                          [X, X_imp_mean]):#, X_imp_mice, Z_perm]):#, X_miss]):
+    for name, zhat in zip(algo_name, algo_):
         
         if name == 'X_mi':
-            res_tau_dr, res_tau_ols, res_tau_ols_ps = tau_mi(zhat, w, y, method=method)
+            res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid = tau_mi(zhat, w, y, method=method)
         
         else:
             ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat, w, y)
             res_tau_ols = tau_ols(zhat, w, y)
             res_tau_ols_ps = tau_ols_ps(zhat, w, y)
             res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+            lr = LinearRegression()
+            lr.fit(zhat, y)
+            y_hat = lr.predict(zhat)
+            res_tau_resid = tau_residuals(y, w, y_hat, ps_hat, method)
         
-        
-        tau[name] = res_tau_dr, res_tau_ols, res_tau_ols_ps
+        tau[name] = res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid
 
     return tau
 

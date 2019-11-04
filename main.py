@@ -13,7 +13,7 @@ memory = Memory('cache_dir', verbose=0)
 
 @memory.cache
 def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
-        d_cevae=20, n_epochs=402, full_baseline=False,
+        full_baseline=False,
 		method="glm", **kwargs):
 
     if model == "lrmf":
@@ -38,18 +38,18 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
 
     if full_baseline:
         # complete the baseline 
-        U_soft = get_U_softimpute(X_miss)
+        Z_mf = get_U_softimpute(X_miss)
             # need try-except for sklearn version
         try:
             from sklearn.impute import IterativeImputer
-            X_imp_mice = IterativeImputer().fit_transform(X_miss)
+            X_imp = IterativeImputer().fit_transform(X_miss)
         except:
             from sklearn.experimental import enable_iterative_imputer
             from sklearn.impute import IterativeImputer
-            X_imp_mice = IterativeImputer().fit_transform(X_miss)
+            X_imp = IterativeImputer().fit_transform(X_miss)
 
-        algo_name += ['X_imp_mice','U_soft', 'Z_perm']
-        algo_ += [X_imp_mice, U_soft, Z_perm]
+        algo_name += ['X_imp','Z_mf']#, 'Z_perm']
+        algo_ += [X_imp, Z_mf]#, Z_perm]
 
     tau = dict()
     for name, zhat in zip(algo_name, algo_):
