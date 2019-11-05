@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import time
 
-from main_ihdp import ihdp_miwae
+from main_ihdp import ihdp_cevae
 from config_ihdp import args
 
 # set here params 
@@ -19,12 +19,13 @@ l_tau = ['tau_cevae']
 
 output = 'results/'+exp_name+'.csv'
 l_scores = []
+args['n_epochs'] = 202
 
 for args['set_id'] in range(1,1001):
     for args['prop_miss'] in range_prop_miss:
                                 
         t0 = time.time()
-        score = ihdp_miwae(**args)
+        score = ihdp_cevae(**args)
         args['time'] = int(time.time() - t0)
         l_scores.append(np.concatenate((list(args.values()),score)))
         print('ihdp with ', args)
