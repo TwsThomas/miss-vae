@@ -41,10 +41,12 @@ def get_best_params(df_results, loss = '1-tau_dr'):
     return best_params, df_best
 
 
-def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue = None,
+def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=None, loss = 'tau_dr', hue = None,
                           baseline = 'exp', full_baseline = False,
                           palette = None, save_plot = None,
-                          ground_truth = pd.DataFrame({'tau': [1]})):
+                          ground_truth = pd.DataFrame({'tau': [1]}),
+                          ylim = None):
+
     # boxplot all baseline + best of df_results
     best_params = dict()
     if hue is not None:
@@ -74,20 +76,35 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         else:
             df_base = get_ihdp_baseline(**best_params)
 
+    df_co = pd.concat((df_best, df_base), sort=True)
 
-    args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed','set_id',hue]))
-    best_params_list = []
-    params_list = []
-    for key, value in best_params.items():
-        temp = [key,value]
-        if key in args_col:
-            best_params_list.append(value)
-            params_list.append(list(temp))
-    df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
+    if df_mice_results is not None:
+        args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed','set_id',hue]))
+        best_params_list = []
+        params_list = []
+        for key, value in best_params.items():
+            temp = [key,value]
+            if key in args_col:
+                best_params_list.append(value)
+                params_list.append(list(temp))
+        df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
+        df_co = pd.concat((df_best, df_base, df_mice), sort=True)
 
-    df_co = pd.concat((df_best, df_base, df_mice), sort=True)
-    # sns.boxplot(x='algo', y='1-tau_dr', data=df_co)
+    if df_cevae_results is not None:
+        args_col = list(set(df_cevae_results.columns[:list(df_cevae_results.columns).index('tau_cevae')]) - set(['seed','set_id',hue]))
+        best_params_list = []
+        params_list = []
+        for key, value in best_params.items():
+            temp = [key,value]
+            if key in args_col:
+                best_params_list.append(value)
+                params_list.append(list(temp))
+        df_cevae = df_cevae_results.loc[(df_cevae_results[args_col] == best_params_list).all(axis=1)]
 
+        df_co = pd.concat((df_best, df_base, df_mice, df_cevae), sort=True)
+
+
+    
     if any(np.isnan(df_co.loc[df_co['algo']=='mice', hue])):
         i = 0
         tmp = pd.DataFrame()
@@ -101,30 +118,52 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
                 tmp = tt.copy()
             i += 1
         df_co = pd.concat((df_co, tmp), sort= True)
+
+    if any(np.isnan(df_co.loc[df_co['algo']=='cevae', hue])):
+        i = 0
+        tmp = pd.DataFrame()
+        for param_hue in df_results[hue].unique():
+            tt = pd.DataFrame()
+            tt = df_co.loc[df_co['algo']=='cevae']
+            tt[hue] = param_hue
+            if i > 0:
+                tmp = pd.concat((tmp,tt))
+            else:
+                tmp = tt.copy()
+            i += 1
+        df_co = pd.concat((df_co, tmp), sort= True)
             
 
     # if 'set_id' in best_params.keys():
     #     ground_truth = ground_truth.loc[ground_truth['set_id'] == best_params['set_id']]
 
+    # print(df_co.loc[df_co['algo']=='cevae',])
+    # print(df_co)
 
     plt.figure(figsize=(15,5))
-    plt.subplot(1,2,1)
+    ax1 = plt.subplot(1,2,1)
     sns.swarmplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
     if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
-            plt.axhline(y=np.mean(ground_truth['tau']), color='k')
-
+        plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+    for tick in ax1.xaxis.get_major_ticks():
+        tick.label.set_fontsize(20)
+    ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, horizontalalignment='right')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
 
     lgd1 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
          fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
-    plt.subplot(1,2,2)
+    ax2 =plt.subplot(1,2,2)
     sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
     if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
             plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+    for tick in ax2.xaxis.get_major_ticks():
+        tick.label.set_fontsize(20)
+    ax2.set_xticklabels(ax2.get_xticklabels(), rotation=45, horizontalalignment='right')
+    
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
     #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
-    lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2),
          fancybox=True, shadow=True, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
 
     if hue is not None:
@@ -136,8 +175,10 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
                   'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.process', loss]))
             print('MDC.mi: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='MDC.mi', loss]),
                   'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.mi', loss]))
-            print('MF: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='Z_mf', loss]),
-                  'std: ',standard_error(tmp.loc[tmp['algo']=='Z_mf', loss]))
+            print('MF: mean ', loss,':', np.mean(tmp.loc[(tmp['algo']=='Z_mf') & (tmp['prop_miss']==0.3), loss]),
+              'std: ',standard_error(tmp.loc[(tmp['algo']=='Z_mf') & (tmp['prop_miss']==0.3), loss]))
+            print('cevae: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='cevae', loss]),
+                  'std: ',standard_error(tmp.loc[tmp['algo']=='cevae', loss]))
             print('mice: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='mice', loss]),
                   'std: ',standard_error(tmp.loc[tmp['algo']=='mice', loss]))
             print('mean_imp: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X_imp_mean', loss]),
@@ -151,8 +192,10 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
               'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.process', loss]))
         print('MDC.mi: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='MDC.mi', loss]),
               'std: ',standard_error(tmp.loc[tmp['algo']=='MDC.mi', loss]))
-        print('MF: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='Z_mf', loss]),
-              'std: ',standard_error(tmp.loc[tmp['algo']=='Z_mf', loss]))
+        print('MF: mean ', loss,':', np.mean(tmp.loc[(tmp['algo']=='Z_mf') & (tmp['prop_miss']==0.3), loss]),
+              'std: ',standard_error(tmp.loc[(tmp['algo']=='Z_mf') & (tmp['prop_miss']==0.3), loss]))
+        print('cevae: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='cevae', loss]),
+              'std: ',standard_error(tmp.loc[tmp['algo']=='cevae', loss]))
         print('mice: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='mice', loss]),
               'std: ',standard_error(tmp.loc[tmp['algo']=='mice', loss]))
         print('mean_imp: mean ', loss,':', np.mean(tmp.loc[tmp['algo']=='X_imp_mean', loss]),
@@ -166,15 +209,28 @@ def boxplot_with_baseline(df_results, df_mice_results=None, loss = 'tau_dr', hue
         for key, value in best_params.items():
             temp = [key,value]
             params_list.append(list(temp))
+        df_co.loc[df_co['algo']=='mice','algo'] = 'MICE'
+        df_co.loc[df_co['algo']=='Z_mf','algo'] = 'MF'
+        df_co = df_co.sort_values(by=['algo'])
 
         plt.figure(figsize=(7.5,5))
-        sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
+        ax = sns.boxplot(x='algo', y=loss, hue = hue, data=df_co, palette = palette)
         if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
             plt.axhline(y=np.mean(ground_truth['tau']), color='k')
-        #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
-        #      ncol=3, fancybox=True, title=hue, title_fontsize = 15, fontsize=15)
-        lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-                          fancybox=True, shadow=False, ncol=4, title=hue, title_fontsize = 15, fontsize=15)
+        if (loss == 'tau_dr') | (loss == 'tau_ols') | (loss == 'tau_ols_ps'):
+            plt.axhline(y=np.mean(ground_truth['tau']), color='k')
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(20)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(15)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.ylabel(r'$\hat{\tau}$', fontsize=20, style='oblique')
+        plt.xlabel('')
+        if ylim is not None:
+            plt.ylim(ylim)
+    
+        lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25),
+                fancybox=True, shadow=False, ncol=4, title=hue, title_fontsize = 17, fontsize=17)
         figname = str('./figures/'+'_'.join(''.join(map(str,x)) for x in params_list)+'_'+ 'metric'+loss+'_'+save_plot)
         plt.savefig(figname, bbox_extra_artists=(lgd1,lgd2), bbox_inches='tight',format='pdf')
 
@@ -206,15 +262,15 @@ def get_baseline(repetitions=10, show=False, loss = '|1-tau_dr|', **kwargs):
     return df_base
 
 @memory.cache
-def get_ihdp_baseline(set_id = 1, prop_miss=0.1, 
+def get_ihdp_baseline(set_id = 1, prop_miss=0.3, 
                       method="glm", show=False, loss = '|1-tau_dr|', set_id_range = list(range(1,11)), **kwargs):
     # return baseline with X, X_imp, Z_perm
 
     df_base = pd.DataFrame()
     for set_id in set_id_range:
         kwargs['set_id'] = set_id
-        d_tau = ihdp_baseline(**kwargs)
-        X = pd.read_csv('./data/IHDP/csv/ihdp_npci_' + str(set_id) + '.csv')
+        d_tau = ihdp_baseline(set_id = set_id, prop_miss = prop_miss, full_baseline = True) #ihdp_baseline(**kwargs)
+        X = pd.read_csv('./data/IHDP/csv/R_ihdp_npci_' + str(set_id) + '.csv')
         tau = np.mean(X.iloc[:,4]  - X.iloc[:,3])
         df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps','tau_resid']).T
         df['tau'] = tau
