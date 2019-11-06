@@ -27,7 +27,7 @@ for args['set_id'] in range(1,1001):
         t0 = time.time()
         score = ihdp_cevae(**args)
         args['time'] = int(time.time() - t0)
-        l_scores.append(np.concatenate((list(args.values()),score)))
+        l_scores.append(np.concatenate((list(args.values()),[score])))
         print('ihdp with ', args)
         print('........... DONE')
         print('in ', int(args["time"]) , ' s  \n\n')
