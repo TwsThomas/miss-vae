@@ -15,7 +15,7 @@ memory = Memory('cache_dir', verbose=0)
 def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
         full_baseline=False,
 		method="glm", **kwargs):
-
+    
     if model == "lrmf":
         Z, X, w, y, ps = gen_lrmf(n=n, d=d, p=p, citcio = citcio, prop_miss = prop_miss, seed = seed)
     elif model == "dlvm":
@@ -122,7 +122,7 @@ def exp_cevae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
 
 
 def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, seed=0,
-        d_miwae=3, n_epochs=602, sig_prior=1, add_wy = False,
+        d_miwae=3, n_epochs=602, sig_prior=1, add_wy = False, num_samples_zmul = 200,
 		method="glm", **kwargs):
 
     from miwae import miwae
@@ -137,10 +137,10 @@ def exp_miwae(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False, s
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
     if add_wy:
-        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior, num_samples_zmul = num_samples_zmul,
                                      n_epochs=n_epochs, add_wy = add_wy, w=w, y=y)
     else:
-        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior,
+        xhat, zhat, zhat_mul = miwae(X_miss, d=d_miwae, sig_prior = sig_prior, num_samples_zmul = num_samples_zmul,
                                      n_epochs=n_epochs, add_wy = add_wy)
 
     # print('shape of outputs miwae:')
