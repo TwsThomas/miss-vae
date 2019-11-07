@@ -13,10 +13,10 @@ memory = Memory('cache_dir', verbose=0)
 
 @memory.cache
 def ihdp_baseline(set_id=1, prop_miss=0.1, seed=0,
-        full_baseline = False,
+        full_baseline = False, add_wy = False, sig_prior = 1, d_miwae = 10, n_epochs = 10,
 		method="glm", **kwargs):
     
-    X = pd.read_csv('./data/IHDP/csv/R_ihdp_npci_' + str(set_id) + '.csv')
+    X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
     w = np.array(X.iloc[:,0]).reshape((-1,1))
     y = np.array(X.iloc[:,1]).reshape((-1,1))
     
@@ -81,7 +81,7 @@ def ihdp_mi(set_id = 1, prop_miss=0.1, seed=0, m = 10,
         method="glm", **kwargs):
     from metrics import tau_mi
 
-    X = pd.read_csv('./data/IHDP/csv/R_ihdp_npci_' + str(set_id) + '.csv')
+    X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
     w = np.array(X.iloc[:,0]).reshape((-1,1))
     y = np.array(X.iloc[:,1]).reshape((-1,1))
     
@@ -103,7 +103,7 @@ def ihdp_cevae(set_id = 1, prop_miss=0.1, seed=0,
     from cevae_tf import cevae_tf
     from sklearn.preprocessing import Imputer
 
-    X = pd.read_csv('./data/IHDP/csv/R_ihdp_npci_' + str(set_id) + '.csv')
+    X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
     w = np.array(X.iloc[:,0]).reshape((-1,1))
     y = np.array(X.iloc[:,1]).reshape((-1,1))
     
@@ -135,7 +135,7 @@ def ihdp_miwae(set_id = 1, prop_miss=0.1, seed=0,
 
     from miwae import miwae
 
-    X = pd.read_csv('./data/IHDP/csv/R_ihdp_npci_' + str(set_id) + '.csv')
+    X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
     w = np.array(X.iloc[:,0]).reshape((-1,1))
     y = np.array(X.iloc[:,1]).reshape((-1,1))
     
