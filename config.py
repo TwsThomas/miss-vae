@@ -17,7 +17,7 @@ args = {
     'time' : -1,
     'citcio': False,
     'add_wy': False,
-    'm' : 10
+    'm' : 10,
     'num_samples_zmul': 200
 }
 
