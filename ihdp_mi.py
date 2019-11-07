@@ -16,7 +16,7 @@ exp_name = 'ihdp_mi'
 args['m'] = 10
 print('starting exp: ' + exp_name)
 l_tau = ['tau_dr', 'tau_ols', 'tau_ols_ps']
-output = 'results/2019-11-04_'+exp_name+'.csv'
+output = 'results/2019-11-07_'+exp_name+'.csv'
 l_scores = []
 
 for args['set_id'] in range(1,1001):
