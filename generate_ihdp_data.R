@@ -20,3 +20,11 @@ for (seed in 1:1000){
             file=paste0("./IHDP/csv/R_ihdp_npci_",seed,".csv"),col.names = FALSE,row.names=FALSE, sep = ",")
 }
 
+for (seed in 1:1000){
+  generateDataForIterInCurrentEnvironment(seed, x, z, w, overlap = "all", setting = "A")
+  y.f <- if_else(z==1, y.1, y.0)
+  y.cf <- if_else(z==0, y.1, y.0)
+  
+  write.table(cbind(z, y.f, y.cf, mu.0, mu.1, x.r),
+              file=paste0("./IHDP/csv/R_ate_ihdp_npci_",seed,".csv"),col.names = FALSE,row.names=FALSE, sep = ",")
+}
