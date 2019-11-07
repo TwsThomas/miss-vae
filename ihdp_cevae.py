@@ -9,7 +9,7 @@ from config_ihdp import args
 # set here params 
 range_prop_miss = [0.1, 0.3, 0]
 
-exp_name = 'ihdp_05.1_11_cevae'
+exp_name = 'ihdp_07.1_11_cevae'
 # 
 
 
