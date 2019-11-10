@@ -192,6 +192,30 @@ def ihdp_miwae(set_id = 1, prop_miss=0.1, seed=0,
 
     return res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, res_mul_tau_resid, dcor_zhat, dcor_zhat_mul
 
+def ihdp_miwae_cv(set_id = 1, prop_miss=0.1, seed=0,
+                  d_miwae_list=[10, 100], n_epochs=602, sig_prior_list=[0.1, 1, 10], add_wy = False,
+                  method="glm", k_fold = 5, **kwargs):
+
+    from miwae import miwae_cv
+
+    X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
+    w = np.array(X.iloc[:,0]).reshape((-1,1))
+    y = np.array(X.iloc[:,1]).reshape((-1,1))
+    
+    X = np.array(X.iloc[:,5:])
+        
+    X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
+
+    if add_wy:
+        elbo = miwae_cv(X_miss, d_miwae_list=d_miwae_list, sig_prior_list = sig_prior_list, k_fold = k_fold,
+                        n_epochs=n_epochs, add_wy = add_wy, w=w, y=y)
+    else:
+        elbo = miwae_cv(X_miss, d_miwae_list=d_miwae_list, sig_prior_list = sig_prior_list, k_fold = k_fold,
+                        n_epochs=n_epochs, add_wy = add_wy)
+
+
+    return elbo
+
 
 if __name__ == '__main__':
 
