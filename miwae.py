@@ -198,7 +198,7 @@ def miwae(X_miss, d=3, d_miwae=3, h_miwae=128, add_mask=False, sig_prior = 1,
                 zhat[i,:] = z_hat.eval(feed_dict={x: xhat_0[i,:].reshape([1,p+pwy]), K:10000, xmask: mask[i,:].reshape([1,p+pwy])})
                 # Z|X* sampling:
                 si, zmu = sess.run([sirz, zmul],feed_dict={x: xhat_0[i,:].reshape([1,p+pwy]), K:10000, xmask: mask[i,:].reshape([1,p+pwy])})    
-                zhat_mul[:,i,:] = np.squeeze(zmu[si,:,:])
+                zhat_mul[:,i,:] = np.squeeze(zmu[si,:,:]).reshape((num_samples_zmul, d_miwae))
             # err = np.array([mse(xhat,xfull,mask)])
             # mse_train = np.append(mse_train,err,axis=0)
             # print('Imputation MSE  %g' %err)

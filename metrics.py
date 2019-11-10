@@ -60,11 +60,18 @@ def get_ps_y01_hat(zhat, w, y):
     lr.fit(zhat, w)
     ps_hat = lr.predict_proba(zhat)[:,1]  
 
-    lr = LinearRegression()
+    if len(np.unique(y)) == 2:
+        lr = LogisticRegression(solver='lbfgs')
+    else:
+        lr = LinearRegression()
+
     lr.fit(zhat[np.equal(w, np.ones(n)),:], y[np.equal(w, np.ones(n))])
     y1_hat = lr.predict(zhat)
     
-    lr = LinearRegression()
+    if len(np.unique(y)) == 2:
+        lr = LogisticRegression(solver='lbfgs')
+    else:
+        lr = LinearRegression()
     lr.fit(zhat[np.equal(w, np.zeros(n)),:], y[np.equal(w, np.zeros(n))])
     y0_hat = lr.predict(zhat)
 
@@ -124,9 +131,15 @@ def tau_ols(Z_hat, w, y):
 
     y = y.reshape((-1,))
     ZW = np.concatenate((Z_hat, w.reshape((-1,1))), axis=1)
-    lr = LinearRegression()
-    lr.fit(ZW, y)
-    tau = lr.coef_[-1]
+
+    if len(np.unique(y)) == 2:
+        lr = LogisticRegression(solver='lbfgs')
+        lr.fit(ZW, y)
+        tau = lr.coef_[0,-1]
+    else:
+        lr = LinearRegression()
+        lr.fit(ZW, y)
+        tau = lr.coef_[-1]
 
     return tau
 
@@ -143,8 +156,14 @@ def tau_ols_ps(zhat, w, y):
     ps_hat = lr.predict_proba(zhat)
 
     ZpsW = np.concatenate((zhat,ps_hat, w.reshape((-1,1))), axis=1)
-    lr = LinearRegression()
-    lr.fit(ZpsW, y)
-    tau = lr.coef_[-1]
+
+    if len(np.unique(y)) == 2:
+        lr = LogisticRegression(solver='lbfgs')
+        lr.fit(ZpsW, y)
+        tau = lr.coef_[0,-1]
+    else:
+        lr = LinearRegression()
+        lr.fit(ZpsW, y)
+        tau = lr.coef_[-1]
 
     return tau
