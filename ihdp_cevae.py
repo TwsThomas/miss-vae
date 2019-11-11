@@ -20,6 +20,9 @@ l_tau = ['tau_cevae']
 output = 'results/'+exp_name+'.csv'
 l_scores = []
 args['n_epochs'] = 100
+args_col = list(set(args.keys()) - set(['set_id_range']))
+args = {k: args[k] for k in args_col}
+
 
 for args['set_id'] in range(1,1001):
     for args['prop_miss'] in range_prop_miss:
