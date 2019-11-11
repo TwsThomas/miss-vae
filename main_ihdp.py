@@ -134,8 +134,6 @@ def ihdp_miwae(set_id_range = range(1,1001), prop_miss=0.1, seed=0,
 		method="glm", **kwargs):
 
     from miwae import miwae
-
-    X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
     l_scores = []
     for set_id in set_id_range:
         X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
