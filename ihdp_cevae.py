@@ -7,9 +7,9 @@ from main_ihdp import ihdp_cevae
 from config_ihdp import args
 
 # set here params 
-range_prop_miss = [0.1, 0.3, 0]
+range_prop_miss = [0.5,]#[0.1, 0.3, 0]
 
-exp_name = 'ihdp_08.1_11_cevae'
+exp_name = 'ihdp_08.2_11_cevae'
 # 
 
 
