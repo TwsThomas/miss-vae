@@ -210,7 +210,7 @@ def ihdp_miwae(set_id_range = range(1,1001), prop_miss=0.1, seed=0,
             res_mul_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method))
             res_mul_tau_ols.append(tau_ols(zhat_b, w, y))
             res_mul_tau_ols_ps.append(tau_ols_ps(zhat_b, w, y))
-            res_tau_diffmu.append(np.mean(y1_hat - y0_hat))
+            res_mul_tau_diffmu.append(np.mean(y1_hat - y0_hat))
             lr = LinearRegression()
             lr.fit(zhat, y)
             y_hat = lr.predict(zhat_b)
