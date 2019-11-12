@@ -87,7 +87,7 @@ def ihdp_mi(set_id = 1, prop_miss=0.1, seed=0, m = 10,
     
     X = np.array(X.iloc[:,5:])
         
-
+    print(prop_miss)
     X_miss = ampute(X, prop_miss = prop_miss, seed = seed)
 
 
