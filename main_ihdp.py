@@ -162,6 +162,7 @@ def ihdp_miwae(set_id_range = range(1,1001), prop_miss=0.1, seed=0,
         res_tau_ols = tau_ols(zhat, w, y)
         res_tau_ols_ps = tau_ols_ps(zhat, w, y)
         res_tau_dr = tau_dr(y, w, y0_hat, y1_hat, ps_hat, method)
+        res_tau_diffmu = np.mean(y1_hat - y0_hat)
 
         lr = LinearRegression()
         lr.fit(zhat, y)
@@ -173,11 +174,13 @@ def ihdp_miwae(set_id_range = range(1,1001), prop_miss=0.1, seed=0,
         res_mul_tau_ols = []
         res_mul_tau_ols_ps = []
         res_mul_tau_resid = []
+        res_mul_tau_diffmu = []
         for zhat_b in zhat_mul: 
             ps_hat, y0_hat, y1_hat = get_ps_y01_hat(zhat_b, w, y)
             res_mul_tau_dr.append(tau_dr(y, w, y0_hat, y1_hat, ps_hat, method))
             res_mul_tau_ols.append(tau_ols(zhat_b, w, y))
             res_mul_tau_ols_ps.append(tau_ols_ps(zhat_b, w, y))
+            res_tau_diffmu.append(np.mean(y1_hat - y0_hat))
             lr = LinearRegression()
             lr.fit(zhat, y)
             y_hat = lr.predict(zhat_b)
@@ -187,17 +190,20 @@ def ihdp_miwae(set_id_range = range(1,1001), prop_miss=0.1, seed=0,
         res_mul_tau_ols = np.mean(res_mul_tau_ols)
         res_mul_tau_ols_ps = np.mean(res_mul_tau_ols_ps)
         res_mul_tau_resid = np.mean(res_mul_tau_resid)
+        res_mul_tau_diffmu = np.mean(res_mul_tau_diffmu)
 
         dcor_zhat = np.nan
 
         dcor_zhat_mul = np.nan
 
-        score = [prop_miss, d_miwae, sig_prior, n_epochs, add_wy, set_id, res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, res_mul_tau_resid, dcor_zhat, dcor_zhat_mul]
+        score = [prop_miss, d_miwae, sig_prior, n_epochs, add_wy, set_id, res_tau_dr, res_tau_ols, res_tau_ols_ps, res_tau_resid, res_tau_diffmu, res_mul_tau_dr, res_mul_tau_ols, res_mul_tau_ols_ps, res_mul_tau_resid, res_mul_tau_diffmu, dcor_zhat, dcor_zhat_mul]
         l_scores.append(score)
         
     score_data = pd.DataFrame(l_scores, 
                               columns=list(['prop_miss','d_miwae','sig_prior','n_epochs','add_wy','set_id',
-                                'res_tau_dr', 'res_tau_ols', 'res_tau_ols_ps', 'res_tau_resid', 'res_mul_tau_dr', 'res_mul_tau_ols', 'res_mul_tau_ols_ps', 'res_mul_tau_resid', 'dcor_zhat', 'dcor_zhat_mul']))
+                                'res_tau_dr', 'res_tau_ols', 'res_tau_ols_ps', 'res_tau_resid', 'res_tau_diffmu', 
+                                'res_mul_tau_dr', 'res_mul_tau_ols', 'res_mul_tau_ols_ps', 'res_mul_tau_resid', 'res_mul_tau_diffmu', 
+                                'dcor_zhat', 'dcor_zhat_mul']))
                     
     return score_data
 
