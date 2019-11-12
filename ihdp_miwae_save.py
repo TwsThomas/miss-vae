@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 
-from main_ihdp import ihdp_miwae
+from main_ihdp import ihdp_miwae_save
 from config_ihdp import args
 
 # set here params 
