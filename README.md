@@ -3,6 +3,7 @@
 Code for MissDeepCausal.
 
 Structure:
+```
 .
 |  generate_data.py
 |    - gen_lrmf: generate data (Z,X,W,Y) according to LRMF model
@@ -68,7 +69,7 @@ Structure:
 ./sandbox
 |
 |
-
+```
 
 
 ### Running exp:  
