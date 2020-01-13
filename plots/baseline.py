@@ -14,12 +14,12 @@ from joblib import Memory
 memory = Memory('cache_dir', verbose=0)
 
 
-def load_results(expname = 'exp_15.2_10_choux.csv_temp'):
+def load_results(expname = 'exp_15.2_10_choux.csv_temp', prefix = 'tau_'):
     df = pd.read_csv('results/' + expname)
     df.drop(labels='Unnamed: 0', inplace=True, axis=1)
-    df['|1-tau_dr|'] = abs(df['tau_dr'] - 1)
-    df['|1-tau_ols|'] = abs(df['tau_ols'] - 1)
-    df['|1-tau_ols_ps|'] = abs(df['tau_ols_ps'] - 1)
+    df['|1-tau_dr|'] = abs(df[prefix+'dr'] - 1)
+    df['|1-tau_ols|'] = abs(df[prefix+'ols'] - 1)
+    df['|1-tau_ols_ps|'] = abs(df[prefix+'ols_ps'] - 1)
     print('results.shape', df.shape)
     if 'algo' not in list(df.columns):
         df.loc[:,'algo'] = ['miwae_'] * df.shape[0]
@@ -42,7 +42,7 @@ def get_best_params(df_results, loss = '1-tau_dr'):
 
 
 def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=None, loss = 'tau_dr', hue = None,
-                          baseline = 'exp', full_baseline = False,
+                          baseline = 'exp', full_baseline = False,  set_id_range = None,
                           palette = None, save_plot = None,
                           ground_truth = pd.DataFrame({'tau': [1]}),
                           ylim = None):
@@ -63,7 +63,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
             if baseline == 'exp':
                 df_base_hue = get_baseline(**best_params_hue)
             else:
-                df_base_hue = get_ihdp_baseline(**best_params_hue)
+                df_base_hue = get_ihdp_baseline(**best_params_hue, set_id_range = set_id_range)
             df_base_hue[hue] = param_hue
             
             df_base = pd.concat((df_base, df_base_hue))
@@ -74,20 +74,22 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
         if baseline == 'exp':
             df_base = get_baseline(**best_params)
         else:
-            df_base = get_ihdp_baseline(**best_params)
+            df_base = get_ihdp_baseline(**best_params, set_id_range = set_id_range)
 
     df_co = pd.concat((df_best, df_base), sort=True)
 
     if df_mice_results is not None:
         args_col = list(set(df_mice_results.columns[:list(df_mice_results.columns).index('tau_dr')]) - set(['seed','set_id',hue]))
         best_params_list = []
-        params_list = []
+        params_dict = dict()
         for key, value in best_params.items():
             temp = [key,value]
             if key in args_col:
                 best_params_list.append(value)
-                params_list.append(list(temp))
-        df_mice = df_mice_results.loc[(df_mice_results[args_col] == best_params_list).all(axis=1)]
+                params_dict[key] = value
+        print(params_dict)
+        print(best_params_list)
+        df_mice = df_mice_results.loc[(df_mice_results[params_dict.keys()] == best_params_list).all(axis=1)]
         df_co = pd.concat((df_best, df_base, df_mice), sort=True)
 
     if df_cevae_results is not None:
@@ -105,7 +107,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
 
 
     
-    if any(np.isnan(df_co.loc[df_co['algo']=='mice', hue])):
+    if hue is not None and any(np.isnan(df_co.loc[df_co['algo']=='mice', hue])):
         i = 0
         tmp = pd.DataFrame()
         for param_hue in df_results[hue].unique():
@@ -119,7 +121,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
             i += 1
         df_co = pd.concat((df_co, tmp), sort= True)
 
-    if any(np.isnan(df_co.loc[df_co['algo']=='cevae', hue])):
+    if hue is not None and any(np.isnan(df_co.loc[df_co['algo']=='cevae', hue])):
         i = 0
         tmp = pd.DataFrame()
         for param_hue in df_results[hue].unique():
@@ -229,10 +231,14 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
         if ylim is not None:
             plt.ylim(ylim)
     
-        lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25),
-                fancybox=True, shadow=False, ncol=4, title=hue, title_fontsize = 17, fontsize=17)
         figname = str('./figures/'+'_'.join(''.join(map(str,x)) for x in params_list)+'_'+ 'metric'+loss+'_'+save_plot)
-        plt.savefig(figname, bbox_extra_artists=(lgd1,lgd2), bbox_inches='tight',format='pdf')
+        
+        if hue is not None:
+            lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25),
+                fancybox=True, shadow=False, ncol=4, title=hue, title_fontsize = 17, fontsize=17)
+            plt.savefig(figname, bbox_extra_artists=(lgd2), bbox_inches='tight',format='pdf')
+        else:
+            plt.savefig(figname, bbox_inches='tight',format='pdf')
 
 @memory.cache
 def get_baseline(repetitions=10, show=False, loss = '|1-tau_dr|', **kwargs):
@@ -270,7 +276,7 @@ def get_ihdp_baseline(set_id = 1, prop_miss=0.3,
     for set_id in set_id_range:
         kwargs['set_id'] = set_id
         d_tau = ihdp_baseline(set_id = set_id, prop_miss = prop_miss, full_baseline = True) #ihdp_baseline(**kwargs)
-        X = pd.read_csv('./data/IHDP/csv/R_ihdp_npci_' + str(set_id) + '.csv')
+        X = pd.read_csv('./data/IHDP/csv/R_ate_ihdp_npci_' + str(set_id) + '.csv')
         tau = np.mean(X.iloc[:,4]  - X.iloc[:,3])
         df = pd.DataFrame(d_tau, index = ['tau_dr','tau_ols','tau_ols_ps','tau_resid']).T
         df['tau'] = tau

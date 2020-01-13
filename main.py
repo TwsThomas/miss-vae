@@ -33,8 +33,8 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
     Z_perm = np.random.permutation(Z)
     # Z_rnd = np.random.randn(Z.shape[0], Z.shape[1])
 
-    algo_name = ['Z', 'X', 'X_imp_mean']
-    algo_ = [Z, X, X_imp_mean]
+    algo_name = ['Z', 'X']#, 'X_imp_mean']
+    algo_ = [Z, X]#, X_imp_mean]
 
     if full_baseline:
         # complete the baseline 
@@ -48,8 +48,8 @@ def exp_baseline(model="dlvm", n=1000, d=3, p=100, prop_miss=0.1, citcio = False
             from sklearn.impute import IterativeImputer
             X_imp = IterativeImputer().fit_transform(X_miss)
 
-        algo_name += ['X_imp','Z_mf']#, 'Z_perm']
-        algo_ += [X_imp, Z_mf]#, Z_perm]
+        algo_name += ['Z_mf']#['X_imp','Z_mf']#, 'Z_perm']
+        algo_ += [Z_mf]#[X_imp, Z_mf]#, Z_perm]
 
     tau = dict()
     for name, zhat in zip(algo_name, algo_):

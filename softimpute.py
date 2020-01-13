@@ -27,6 +27,7 @@ def soft_impute_rank(X_obs, n_folds = 5, max_rank = 10):
         si = SoftImpute(max_rank=max_rank, verbose=False)
         X_obs_imp = si.fit_transform(X_obs_train)
         si.U
+        si.shrinkage_value
         mae_obs = si.mae_obs
         mae_test = np.mean(np.abs(X_obs[test_mask] - X_obs_imp[test_mask]))
 
@@ -45,19 +46,20 @@ def get_U_softimpute(X_obs, list_rank=None, boxplot=False, n_folds=3):
     best_mae = float('inf')
     best_U = None
     best_rank = None
+    lamb = None
     
-    list_rank = [1,2,3,4,5,6,7,8,9,10,20,30,100]
+    list_rank = [1,2,3,4,5,6,7,8,9,10,20,30,100, X_obs.shape[1]]
     ll_mae = []
     for max_rank in list_rank:
-        
-        U, l_mae = soft_impute_rank(X_obs, n_folds = n_folds, max_rank = max_rank)
-        ll_mae.append(l_mae)
-        
-        # print(' -get_U_softimpute, rank={}, mae={} + {}'.format(max_rank, np.round(np.mean(l_mae),4), np.round(np.std(l_mae),4)))
-        if np.mean(l_mae) < best_mae:
-            best_mae = np.mean(l_mae)
-            best_U = U
-            best_rank = max_rank
+        if max_rank <= X_obs.shape[1]:
+            U, l_mae = soft_impute_rank(X_obs, n_folds = n_folds, max_rank = max_rank)
+            ll_mae.append(l_mae)
+            
+            # print(' -get_U_softimpute, rank={}, mae={} + {}'.format(max_rank, np.round(np.mean(l_mae),4), np.round(np.std(l_mae),4)))
+            if np.mean(l_mae) < best_mae:
+                best_mae = np.mean(l_mae)
+                best_U = U
+                best_rank = max_rank
     
     if boxplot:
         sns.swarmplot(data=np.array(ll_mae).T)
