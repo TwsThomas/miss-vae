@@ -15,6 +15,8 @@ Structure:
 |                   (with default link = "linear")
 |    - ampute: generate missing values under MCAR mechanism
 |
+|  softimpute.py: SoftImpute implementation from iskandr/fancyimpute
+|
 |  miwae.py
 |    - miwae: MIWAE as proposed by P.-A. Mattei with additional sampling from Z|X 
 |             using self-normalized importance sampling weights
