@@ -4,8 +4,6 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 
-import grf
-
 def tau_mi(xmiss, w, y, m = 10, method = "glm"):
     """ATE estimation via multiple imputation of incomplete covariates
 

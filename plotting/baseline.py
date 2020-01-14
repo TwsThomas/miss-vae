@@ -15,7 +15,7 @@ memory = Memory('cache_dir', verbose=0)
 
 
 def load_results(expname = 'exp_15.2_10_choux.csv_temp', prefix = 'tau_'):
-    df = pd.read_csv('results/' + expname)
+    df = pd.read_csv('../results/' + expname)
     df.drop(labels='Unnamed: 0', inplace=True, axis=1)
     df['|1-tau_dr|'] = abs(df[prefix+'dr'] - 1)
     df['|1-tau_ols|'] = abs(df[prefix+'ols'] - 1)
@@ -43,7 +43,7 @@ def get_best_params(df_results, loss = '1-tau_dr'):
 
 def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=None, loss = 'tau_dr', hue = None,
                           baseline = 'exp', full_baseline = False,  set_id_range = None,
-                          palette = None, save_plot = None,
+                          palette = None, save_plot = None, save_prefix = None,
                           ground_truth = pd.DataFrame({'tau': [1]}),
                           ylim = None):
 
@@ -207,6 +207,9 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
 
     
     if save_plot is not None:
+        if save_prefix is None:
+            save_prefix = '../figures/'
+            
         params_list = []
         for key, value in best_params.items():
             temp = [key,value]
@@ -231,7 +234,7 @@ def boxplot_with_baseline(df_results, df_mice_results=None, df_cevae_results=Non
         if ylim is not None:
             plt.ylim(ylim)
     
-        figname = str('./figures/'+'_'.join(''.join(map(str,x)) for x in params_list)+'_'+ 'metric'+loss+'_'+save_plot)
+        figname = str(save_prefix+'_'.join(''.join(map(str,x)) for x in params_list)+'_'+ 'metric'+loss+'_'+save_plot)
         
         if hue is not None:
             lgd2 = plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.25),
