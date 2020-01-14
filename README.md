@@ -6,8 +6,10 @@ Structure:
 ```
 .
 |  generate_data.py
+|    Main functions
 |    - gen_lrmf: generate data (Z,X,W,Y) according to LRMF model
 |    - gen_dlvm: generate data (Z,X,W,Y) according to DLVM model
+|    Helper functions
 |    - get_dlvm_params: generate parameters of conditional (normal) distribution of X | Z
 |    - citcio_treat_out: generate (W,Y) under "unconfoundedness despite missingness"
 |    - gen_treat: generate W as a function of confounders (with default link = "linear")
@@ -21,21 +23,21 @@ Structure:
 |    - miwae: MIWAE as proposed by P.-A. Mattei with additional sampling from Z|X 
 |             using self-normalized importance sampling weights
 |    - miwae_cv: cross-validation for sigma (variance of prior on Z) 
-|                and for d_miwae (dimension |of latent space)
+|                and for d_miwae (dimension of latent space)
 |
-|  metrics.py
+|  estimators.py
 |    - tau_mi: ATE estimation via multiple imputation
 |    - tau_mia: ATE estimation via mia.grf (not implemented)
 |    - tau_grf: ATE estimation via mean.grf (not implemented)
 |    - get_ps_y01_hat: estimate propensity score and regression functions using logistic and linear regression
 |    - tau_residuals: ATE estimation via residuals on residuals regression (using output of get_ps_y01_hat)
 |    - tau_dr: ATE estimation via parametric AIPW (using output of get_ps_y01_hat)
-|    - tau_ols: ATE estimation via regression of Y on (W, covariates or confounders) 
-|    - tau_ols_ps: ATE estimation via regression of Y on (W, covariates or confounders, PS) 
+|    - tau_ols: ATE estimation via regression of Y on W and (covariates or confounders) 
+|    - tau_ols_ps: ATE estimation via regression of Y on W and (covariates or confounders) and PS
 |                  (using PS estimation from get_ps_y01_hat)
 |
 |  main.py
-|    - exp_baseline: ATE estimation on complete data (X or Z) with synthetic data
+|    - exp_complete: ATE estimation on complete data (X or Z) with synthetic data
 |    - exp_mi: ATE estimation via multiple imputation with synthetic data
 |    - exp_cevae: ATE estimation via CEVAE on mean imputation with synthetic data
 |    - exp_miwae: ATE estimation via MIWAE with synthetic data
