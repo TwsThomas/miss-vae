@@ -4,6 +4,8 @@ results/ihdp*
 results/ihdp/
 results/*_temp
 cache_dir/*
+plotting/cache_dir/*
+plotting/__pycache__/
 *.png*
 *.index
 *.json
