@@ -1,5 +1,11 @@
+R/*job*.sh
+data/tb/
+results/ihdp*
+results/ihdp/
 results/*_temp
 cache_dir/*
+plotting/cache_dir/*
+plotting/__pycache__/
 *.png*
 *.index
 *.json
@@ -108,3 +114,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ihdp csv files 
+csv/
+
+# automatically generated figures
+Figures/
